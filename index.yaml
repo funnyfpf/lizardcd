@@ -1,0 +1,28 @@
+apiVersion: v1
+entries:
+  lizardcd:
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2024-03-25T16:21:09.471843288+08:00"
+    dependencies:
+    - condition: consul.enabled
+      name: consul
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: 10.x.x
+    - name: common
+      repository: oci://registry-1.docker.io/bitnamicharts
+      tags:
+      - bitnami-common
+      version: 2.x.x
+    description: Lizardcd is a cloud native continuous delivery project, which is
+      a server-agent mode architecture based on go-zero framework . It's composed
+      of lizardcd-server, lizardcd-agent, lizardcd-ui and lizardcd-cli.
+    digest: 3ff447c7a652aef8533486250fbfca6beecfd4e3db4974454b7803a55b0b7174
+    maintainers:
+    - name: lizardcd
+    name: lizardcd
+    type: application
+    urls:
+    - https://funnyfpf.github.io/lizardcd/lizardcd-1.0.0.tgz
+    version: 1.0.0
+generated: "2024-03-25T16:21:09.463298572+08:00"
