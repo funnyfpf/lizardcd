@@ -3,7 +3,7 @@ entries:
   lizardcd:
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2024-03-26T10:43:21.954487729+08:00"
+    created: "2024-03-27T11:16:47.188230392+08:00"
     dependencies:
     - condition: consul.enabled
       name: consul
@@ -17,9 +17,9 @@ entries:
     description: Lizardcd is a cloud native continuous delivery project, which is
       a server-agent mode architecture based on go-zero framework . It's composed
       of lizardcd-server, lizardcd-agent, lizardcd-ui and lizardcd-cli.
-    digest: 93ecbeb836fabac883d96acee8d849422c374cc2854e027735ef1cf961e95bbc
+    digest: f2ea921349431d447e7dbcb4941dc0c24a4d8a7b5cdec63350f5d3ac5eb65e7b
     home: https://github.com/hongyuxuan/lizardcd
-    icon: https://project-1255547500.cos.ap-beijing.myqcloud.com/lizardcd%2F20240326-134916.jpg
+    icon: https://camo.githubusercontent.com/bc6ae9a618e70856d6b7ac1518c9230867834326589b0c20dfbee4a2a8a62316/68747470733a2f2f70726f6a6563742d313235353534373530302e636f732e61702d6265696a696e672e6d7971636c6f75642e636f6d2f6c697a61726463642532466c697a61726463642d6c6f676f2e6a7067
     maintainers:
     - name: lizardcd
     name: lizardcd
@@ -27,4 +27,4 @@ entries:
     urls:
     - lizardcd-1.0.0.tgz
     version: 1.0.0
-generated: "2024-03-26T10:43:21.948113035+08:00"
+generated: "2024-03-27T11:16:47.180698261+08:00"
