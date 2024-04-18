@@ -1,0 +1,47 @@
+{{- if .Values.agent.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "lizardcd.agent.fullname" . }}
+  labels:
+    {{- include "lizardcd.agent.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.agent.service.type }}
+  {{- if and .Values.agent.service.clusterIP (eq .Values.agent.service.type "ClusterIP") }}
+  clusterIP: {{ .Values.agent.service.clusterIP }}
+  {{- end }}
+  {{- if .Values.agent.service.sessionAffinity }}
+  sessionAffinity: {{ .Values.agent.service.sessionAffinity }}
+  {{- end }}
+  {{- if .Values.agent.service.sessionAffinityConfig }}
+  sessionAffinityConfig: {{- include "common.tplvalues.render" (dict "value" .Values.agent.service.sessionAffinityConfig "context" $) | nindent 4 }}
+  {{- end }}
+  {{- if or (eq .Values.agent.service.type "LoadBalancer") (eq .Values.agent.service.type "NodePort") }}
+  externalTrafficPolicy: {{ .Values.agent.service.externalTrafficPolicy | quote }}
+  {{- end }}
+  {{- if and (eq .Values.agent.service.type "LoadBalancer") (not (empty .Values.agent.service.loadBalancerSourceRanges)) }}
+  loadBalancerSourceRanges: {{ .Values.agent.service.loadBalancerSourceRanges }}
+  {{- end }}
+  {{- if and (eq .Values.agent.service.type "LoadBalancer") (not (empty .Values.agent.service.loadBalancerIP)) }}
+  loadBalancerIP: {{ .Values.agent.service.loadBalancerIP }}
+  {{- end }}
+  {{- if and (eq .Values.agent.service.type "LoadBalancer") (not (empty .Values.agent.service.loadBalancerClass)) }}
+  loadBalancerClass: {{ .Values.agent.service.loadBalancerClass }}
+  {{- end }}
+  ports:
+    - name: http
+      port: {{ .Values.agent.service.ports.grpc }}
+      targetPort: grpc
+      {{- if and (or (eq .Values.agent.service.type "NodePort") (eq .Values.agent.service.type "LoadBalancer")) (not (empty .Values.agent.service.nodePorts.grpc)) }}
+      nodePort: {{ .Values.agent.service.nodePorts.grpc }}
+      {{- end }}
+    - name: metrics 
+      port: {{ .Values.agent.service.ports.metrics }}
+      targetPort: metrics 
+      {{- if and (or (eq .Values.agent.service.type "NodePort") (eq .Values.agent.service.type "LoadBalancer")) (not (empty .Values.agent.service.nodePorts.metrics)) }}
+      nodePort: {{ .Values.agent.service.nodePorts.metrics }}
+      {{- end }}
+  selector: 
+    {{- include "lizardcd.agent.selectorLabels" . | nindent 6 }}
+
+{{- end }}

@@ -3,7 +3,37 @@ entries:
   lizardcd:
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2024-03-29T17:32:09.408283124+08:00"
+    created: "2024-04-18T17:30:01.439780133+08:00"
+    dependencies:
+    - condition: consul.enabled
+      name: consul
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: 10.x.x
+    - condition: etcd.enabled
+      name: etcd
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: 9.x.x
+    - name: common
+      repository: oci://registry-1.docker.io/bitnamicharts
+      tags:
+      - bitnami-common
+      version: 2.x.x
+    description: Lizardcd is a cloud native continuous delivery project, which is
+      a server-agent mode architecture based on go-zero framework . It's composed
+      of lizardcd-server, lizardcd-agent, lizardcd-ui and lizardcd-cli.
+    digest: cdcd295de20c90e9ceb91889d0ec7b94644d36e13a92f13909fec8861336dab3
+    home: https://github.com/hongyuxuan/lizardcd
+    icon: https://camo.githubusercontent.com/bc6ae9a618e70856d6b7ac1518c9230867834326589b0c20dfbee4a2a8a62316/68747470733a2f2f70726f6a6563742d313235353534373530302e636f732e61702d6265696a696e672e6d7971636c6f75642e636f6d2f6c697a61726463642532466c697a61726463642d6c6f676f2e6a7067
+    maintainers:
+    - name: lizardcd
+    name: lizardcd
+    type: application
+    urls:
+    - lizardcd-1.2.0.tgz
+    version: 1.2.0
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2024-04-18T17:30:01.427093777+08:00"
     dependencies:
     - condition: consul.enabled
       name: consul
@@ -17,7 +47,7 @@ entries:
     description: Lizardcd is a cloud native continuous delivery project, which is
       a server-agent mode architecture based on go-zero framework . It's composed
       of lizardcd-server, lizardcd-agent, lizardcd-ui and lizardcd-cli.
-    digest: b23715a26297c977794926b570cbcdae088bbf9931b387cd1d72dc61459c135d
+    digest: e6561de9dc010d7da61091a8d2025540fbab26fbe280d0caa2a3f5d98df0607b
     home: https://github.com/hongyuxuan/lizardcd
     icon: https://camo.githubusercontent.com/bc6ae9a618e70856d6b7ac1518c9230867834326589b0c20dfbee4a2a8a62316/68747470733a2f2f70726f6a6563742d313235353534373530302e636f732e61702d6265696a696e672e6d7971636c6f75642e636f6d2f6c697a61726463642532466c697a61726463642d6c6f676f2e6a7067
     maintainers:
@@ -29,7 +59,7 @@ entries:
     version: 1.1.0
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2024-03-29T17:32:09.40225234+08:00"
+    created: "2024-04-18T17:30:01.419384002+08:00"
     dependencies:
     - condition: consul.enabled
       name: consul
@@ -53,4 +83,4 @@ entries:
     urls:
     - lizardcd-1.0.0.tgz
     version: 1.0.0
-generated: "2024-03-29T17:32:09.394071128+08:00"
+generated: "2024-04-18T17:30:01.405905327+08:00"

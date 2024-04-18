@@ -1,0 +1,1060 @@
+# Default values for lizardcd.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  imageRegistry: ""
+  ## E.g.
+  ## imagePullSecrets:
+  ##   - myRegistryKeySecretName
+  ##
+  imagePullSecrets: []
+  storageClass: ""
+namespaceOverride: ""
+commonLabels: {}
+commonAnnotations: {}
+server:
+  enabled: true
+  replicaCount: 1
+  
+  image:
+    registry: docker.io
+    repository: lizardcd/lizardcd-server 
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: "v0.3.0"
+    digest: ""
+    pullPolicy: IfNotPresent
+    pullSecrets: []    
+  configuration: {}  
+    # Name: lizardServer
+    # Host: 0.0.0.0
+    # Port: 5117
+    # Timeout: 60000
+    # Log:
+    #   Encoding: plain
+    #   Level: info 
+    # Prometheus:
+    #   Host: 0.0.0.0
+    #   Port: 15117
+    #   Path: /metrics
+    # Consul:
+    #   Address: 10.50.89.17:8086
+    # Auth:
+    #   AccessSecret: wLnOk8keh/WO5u7lX8H1dB1/mcuHvnI/jfWCMXMPg9o=
+    #   AccessExpire: 86400
+
+  nameOverride: ""
+  fullnameOverride: ""
+
+  serviceAccount:
+  # Specifies whether a service account should be created
+    create: true
+  # Annotations to add to the service account
+    annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+    name: ""
+  ## @param server.serviceAccount.automountServiceAccountToken Automount service account token for the server service account
+    ##
+    automountServiceAccountToken: false
+  ## @param server.podLabels Extra labels for lizardcd pods
+  ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+  ##
+  podAnnotations: {}
+
+  ## Configure Pods Security Context
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
+  ## @param server.podSecurityContext.enabled Enabled server-elegible pods' Security Context
+  ## @param server.podSecurityContext.fsGroupChangePolicy Set filesystem group change policy
+  ## @param server.podSecurityContext.sysctls Set kernel settings using the sysctl interface
+  ## @param server.podSecurityContext.supplementalGroups Set filesystem extra groups
+  ## @param server.podSecurityContext.fsGroup Set server-elegible pod's Security Context fsGroup
+  ##
+  podSecurityContext:
+    enabled: true
+    fsGroupChangePolicy: Always
+    sysctls: []
+    supplementalGroups: []
+    fsGroup: 1001
+  ## Configue container's securityContext
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
+  ## @param server.containerSecurityContext.enabled Enabled containers' Security Context
+  ## @param server.containerSecurityContext.seLinuxOptions [object,nullable] Set SELinux options in container
+  ## @param server.containerSecurityContext.runAsUser Set containers' Security Context runAsUser
+  ## @param server.containerSecurityContext.runAsNonRoot Set container's Security Context runAsNonRoot
+  ## @param server.containerSecurityContext.privileged Set container's Security Context privileged
+  ## @param server.containerSecurityContext.readOnlyRootFilesystem Set container's Security Context readOnlyRootFilesystem
+  ## @param server.containerSecurityContext.allowPrivilegeEscalation Set container's Security Context allowPrivilegeEscalation
+  ## @param server.containerSecurityContext.capabilities.drop List of capabilities to be dropped
+  ## @param server.containerSecurityContext.seccompProfile.type Set container's Security Context seccomp profile
+  ##
+  containerSecurityContext:
+    enabled: true
+    seLinuxOptions: null
+    runAsUser: 1001
+    runAsNonRoot: true
+    privileged: false
+    readOnlyRootFilesystem: false
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+    seccompProfile:
+      type: "RuntimeDefault"
+
+  service:
+    ## @param service.enabled Use a service to access lizardcd Server
+    ##
+    enabled: true
+    ## @param server.service.type lizardcd-server service type
+    ##
+    type: ClusterIP
+    ## @param server.service.ports.grpc lizardcd-server service grpc port
+    ## @param server.service.ports.metrics lizardcd-server metrics port
+    ##
+    ports:
+      grpc: 5117
+      metrics: 15117
+    ## Node ports to expose
+    ## @param server.service.nodePorts.grpc Node port for GRPC
+    ## NOTE: choose port between <30000-32767>
+    ##
+    nodePorts:
+      grpc: ""
+      metrics: ""
+    ## @param server.service.clusterIP lizardcd-server service Cluster IP
+    ## e.g.:
+    ## clusterIP: None
+    ##
+    clusterIP: ""
+    ## @param server.service.loadBalancerIP lizardcd-server service Load Balancer IP
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-loadbalancer
+    ##
+    loadBalancerIP: ""
+    ## @param server.service.loadBalancerClass lizardcd-server service Load Balancer class if service type is `LoadBalancer` (optional, cloud specific)
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-loadbalancer
+    ##
+    loadBalancerClass: ""
+    ## @param server.service.loadBalancerSourceRanges lizardcd-server service Load Balancer sources
+    ## ref: https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
+    ## e.g:
+    ## loadBalancerSourceRanges:
+    ##   - 10.10.10.0/24
+    ##
+    loadBalancerSourceRanges: []
+    ## @param server.service.externalTrafficPolicy lizardcd-server service external traffic policy
+    ## ref http://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+    ##
+    externalTrafficPolicy: Cluster
+    ## @param server.service.annotations Additional custom annotations for lizardcd-server service
+    ##
+    annotations: {}
+    ## @param server.service.extraPorts Extra ports to expose in lizardcd-server service (normally used with the `sidecars` value)
+    ##
+    extraPorts: []
+    ## @param server.service.sessionAffinity Control where client requests go, to the same pod or round-robin
+    ## Values: ClientIP or None
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/service/
+    ##
+    sessionAffinity: None
+    ## @param server.service.sessionAffinityConfig Additional settings for the sessionAffinity
+    ## sessionAffinityConfig:
+    ##   clientIP:
+    ##     timeoutSeconds: 300
+    ##
+    sessionAffinityConfig: {}
+  
+  ingress:
+    ## @param ingress.enabled Enable ingress resource for Management console
+    ##
+    enabled: false
+    ## @param ingress.path Path for the default host
+    ##
+    path: /
+    ## @param ingress.apiVersion Override API Version (automatically detected if not set)
+    ##
+    apiVersion: ""
+    ## @param ingress.pathType Ingress path type
+    ##
+    pathType: ImplementationSpecific
+    ## DEPRECATED: Use ingress.annotations instead of ingress.certManager
+    ## certManager: false
+    ##
+
+    ## @param ingress.hostname Default host for the ingress resource, a host pointing to this will be created
+    ##
+    hostname: lizardcd-server.local
+    ## @param ingress.annotations Additional annotations for the Ingress resource. To enable certificate autogeneration, place here your cert-manager annotations.
+    ## For a full list of possible ingress annotations, please see
+    ## ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md
+    ## Use this parameter to set the required annotations for cert-manager, see
+    ## ref: https://cert-manager.io/docs/usage/ingress/#supported-annotations
+    ##
+    ## e.g:
+    ## annotations:
+    ##   kubernetes.io/ingress.class: nginx
+    ##   cert-manager.io/cluster-issuer: cluster-issuer-name
+    ##
+    annotations: {}
+    ## @param ingress.ingressClassName Set the ingerssClassName on the ingress record for k8s 1.18+
+    ## This is supported in Kubernetes 1.18+ and required if you have more than one IngressClass marked as the default for your cluster .
+    ## ref: https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/
+    ##
+    ingressClassName: ""
+    ## @param ingress.tls Enable TLS configuration for the hostname defined at ingress.hostname parameter
+    ## TLS certificates will be retrieved from a TLS secret with name: {{- printf "%s-tls" .Values.ingress.hostname | trunc 63 | trimSuffix "-" }}
+    ## or a custom one if you use the tls.existingSecret parameter
+    ## You can use the ingress.secrets parameter to create this TLS secret or relay on cert-manager to create it
+    ## Example:
+    ## existingSecret: name-of-existing-secret
+    ##
+    tls: false
+    ## @param ingress.extraHosts An array with additional hostname(s) to be covered with the ingress record
+    ## Most likely the hostname above will be enough, but in the event more hosts are needed, this is an array
+    ## extraHosts:
+    ## - name: lizardcd-server.local
+    ##   path: /
+    ##
+    extraHosts: []
+    ## @param ingress.extraPaths Any additional arbitrary paths that may need to be added to the ingress under the main host.
+    ## For example: The ALB ingress controller requires a special rule for handling SSL redirection.
+    ## extraPaths:
+    ## - path: /*
+    ##   backend:
+    ##     serviceName: ssl-redirect
+    ##     servicePort: use-annotation
+    ##
+    extraPaths: []
+    ## @param ingress.selfSigned Create a TLS secret for this ingress record using self-signed certificates generated by Helm
+    ##
+    selfSigned: false
+    ## @param ingress.extraTls TLS configuration for additional hostname(s) to be covered with this ingress record
+    ## see: https://kubernetes.io/docs/concepts/services-networking/ingress/#tls
+    ## extraTls:
+    ## - hosts:
+    ##     - lizardcd-server.local
+    ##   secretName: lizardcd-server.local-tls
+    ##
+    extraTls: []
+    ## @param ingress.secrets If you're providing your own certificates, please use this to add the certificates as secrets
+    ## key and certificate should start with -----BEGIN CERTIFICATE----- or
+    ## -----BEGIN RSA PRIVATE KEY-----
+    ##
+    ## name should line up with a tlsSecret set further up
+    ## If you're using cert-manager, this is unneeded, as it will create the secret for you if it is not set
+    ##
+    ## It is also possible to create and manage the certificates outside of this helm chart
+    ## Please see README.md for more information
+    ## Example:
+    ## - name: lizardcd-server.local-tls
+    ##   key:
+    ##   certificate:
+    ##
+    secrets: []
+    ## @param ingress.existingSecret It is you own the certificate as secret.
+    existingSecret: ""
+    ## @param ingress.extraRules Additional rules to be covered with this ingress record
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-rules
+    ## e.g:
+    ## extraRules:
+    ## - host: example.local
+    ##     http:
+    ##       path: /
+    ##       backend:
+    ##         service:
+    ##           name: example-svc
+    ##           port:
+    ##             name: http
+    ##
+    extraRules: []
+
+  resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+  ## @param server.livenessProbe.enabled Enable/disable the liveness probe (server-eligible nodes pod)
+  ## @param server.livenessProbe.initialDelaySeconds Delay before liveness probe is initiated (server-eligible nodes pod)
+  ## @param server.livenessProbe.periodSeconds How often to perform the probe (server-eligible nodes pod)
+  ## @param server.livenessProbe.timeoutSeconds When the probe times out (server-eligible nodes pod)
+  ## @param server.livenessProbe.successThreshold Minimum consecutive successes for the probe to be considered successful after having failed (server-eligible nodes pod)
+  ## @param server.livenessProbe.failureThreshold Minimum consecutive failures for the probe to be considered failed after having succeeded
+  ##
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 3
+  ## @param server.readinessProbe.enabled Enable/disable the readiness probe (server-eligible nodes pod)
+  ## @param server.readinessProbe.initialDelaySeconds Delay before readiness probe is initiated (server-eligible nodes pod)
+  ## @param server.readinessProbe.periodSeconds How often to perform the probe (server-eligible nodes pod)
+  ## @param server.readinessProbe.timeoutSeconds When the probe times out (server-eligible nodes pod)
+  ## @param server.readinessProbe.successThreshold Minimum consecutive successes for the probe to be considered successful after having failed (server-eligible nodes pod)
+  ## @param server.readinessProbe.failureThreshold Minimum consecutive failures for the probe to be considered failed after having succeeded
+  ##
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 3
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    # targetMemoryUtilizationPercentage: 80
+  ## @param server.hostAliases pods host aliases
+  ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
+  ##
+  hostAliases: []
+  ## @param server.updateStrategy.type lizardcd deployment strategy type. If persistence is enabled, strategy type should be set to Recreate to avoid dead locks.
+  ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
+  ##
+  updateStrategy:
+    ## StrategyType
+    ## Can be set to RollingUpdate or Recreate
+    ##
+    type: RollingUpdate
+  ## @param server.schedulerName Name of the k8s scheduler (other than default) for lizardcd pods
+  ## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
+  ##
+  schedulerName: ""
+  ## @param server.terminationGracePeriodSeconds Seconds Redmine pod needs to terminate gracefully
+  ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod/#termination-of-pods
+  ##
+  terminationGracePeriodSeconds: ""
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+agent:
+  enabled: true 
+  replicaCount: 1
+  
+  image:
+    registry: docker.io
+    repository: lizardcd/lizardcd-agent
+    tag: "v0.3.0"
+    digest: ""
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  ##This content will be stored in the the lizardcd-agent.yaml file and the content can be a template.                               
+  ##
+  configuration: {}
+    # Name: LizardAgent
+    # ListenOn: 0.0.0.0:5017
+    # Timeout: 60000
+    # Log:
+    #   Encoding: plain
+    #   Level: info 
+    # Prometheus:
+    #   Host: 0.0.0.0
+    #   Port: 15017
+    #   Path: /metrics
+    # Consul:
+    #   Host: 10.50.89.17:8086
+    #   Key: lizardcd-lizardcd-agent.fiofa-ofa-bdev.bdk8s
+    #   Meta:
+    #     Protocol: grpc
+    #     Service: lizardcd-lizardcd-agent
+    #     Namespace: fiofa-ofa-bdev
+    #     Cluster: bdk8s
+    #   TTL: 60
+  nameOverride: ""
+  fullnameOverride: ""
+  # RBAC configuration
+  ##
+  rbac:
+    ## @param agent.rbac.create Specifies whether RBAC resources should be created
+    ##
+    create: true
+    ## @param agent.rbac.rules Custom RBAC rules to set
+    ## e.g:
+    ## rules:
+    ##   - apiGroups:
+    ##       - ""
+    ##     resources:
+    ##       - pods
+    ##     verbs:
+    ##       - get
+    ##       - list
+    ##
+    rules: []
+
+  serviceAccount:
+  # Specifies whether a service account should be created
+    create: true
+  # Annotations to add to the service account
+    annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+    name: ""
+  ## @param server.serviceAccount.automountServiceAccountToken Automount service account token for the server service account
+    ##
+    automountServiceAccountToken: false
+  ## @param agent.podLabels Extra labels for lizardcd pods
+  ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+  ##
+  
+  podAnnotations: {}
+
+  ## Configure Pods Security Context
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
+  ## @param agent.podSecurityContext.enabled Enabled agent-elegible pods' Security Context
+  ## @param agent.podSecurityContext.fsGroupChangePolicy Set filesystem group change policy
+  ## @param agent.podSecurityContext.sysctls Set kernel settings using the sysctl interface
+  ## @param agent.podSecurityContext.supplementalGroups Set filesystem extra groups
+  ## @param agent.podSecurityContext.fsGroup Set agent-elegible pod's Security Context fsGroup
+  ##
+  podSecurityContext:
+    enabled: true
+    fsGroupChangePolicy: Always
+    sysctls: []
+    supplementalGroups: []
+    fsGroup: 1001
+  ## Configue container's securityContext
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
+  ## @param agent.containerSecurityContext.enabled Enabled containers' Security Context
+  ## @param agent.containerSecurityContext.seLinuxOptions [object,nullable] Set SELinux options in container
+  ## @param agent.containerSecurityContext.runAsUser Set containers' Security Context runAsUser
+  ## @param agent.containerSecurityContext.runAsNonRoot Set container's Security Context runAsNonRoot
+  ## @param agent.containerSecurityContext.privileged Set container's Security Context privileged
+  ## @param agent.containerSecurityContext.readOnlyRootFilesystem Set container's Security Context readOnlyRootFilesystem
+  ## @param agent.containerSecurityContext.allowPrivilegeEscalation Set container's Security Context allowPrivilegeEscalation
+  ## @param agent.containerSecurityContext.capabilities.drop List of capabilities to be dropped
+  ## @param agent.containerSecurityContext.seccompProfile.type Set container's Security Context seccomp profile
+  ##
+  containerSecurityContext:
+    enabled: true
+    seLinuxOptions: null
+    runAsUser: 1001
+    runAsNonRoot: true
+    privileged: false
+    readOnlyRootFilesystem: false
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+    seccompProfile:
+      type: "RuntimeDefault"
+
+  ## Specify the name of the cluster where the agent resides
+  ##
+  clusterName: "bdevk8s"
+  service:
+    ## @param service.enabled Use a service to access lizardcd Agent
+    ##
+    enabled: true
+    type: ClusterIP
+    ## @param agent.service.ports.grpc lizardcd-agent service grpc port
+    ## @param agent.service.ports.metrics lizardcd-agent metrics port
+    ##
+    ports:
+      grpc: 5017
+      metrics: 15017
+    ## Node ports to expose
+    ## @param agent.service.nodePorts.grpc Node port for GRPC
+    ## NOTE: choose port between <30000-32767>
+    ##
+    nodePorts:
+      grpc: ""
+      metrics: ""
+    ## @param agent.service.clusterIP lizardcd-agent service Cluster IP
+    ## e.g.:
+    ## clusterIP: None
+    ##
+    clusterIP: ""
+    ## @param agent.service.loadBalancerIP lizardcd-agent service Load Balancer IP
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-loadbalancer
+    ##
+    loadBalancerIP: ""
+    ## @param agent.service.loadBalancerClass lizardcd-agent service Load Balancer class if service type is `LoadBalancer` (optional, cloud specific)
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-loadbalancer
+    ##
+    loadBalancerClass: ""
+    ## @param agent.service.loadBalancerSourceRanges lizardcd-agent service Load Balancer sources
+    ## ref: https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
+    ## e.g:
+    ## loadBalancerSourceRanges:
+    ##   - 10.10.10.0/24
+    ##
+    loadBalancerSourceRanges: []
+    ## @param agent.service.externalTrafficPolicy lizardcd-agent service external traffic policy
+    ## ref http://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+    ##
+    externalTrafficPolicy: Cluster
+    ## @param agent.service.annotations Additional custom annotations for lizardcd-agent service
+    ##
+    annotations: {}
+    ## @param agent.service.extraPorts Extra ports to expose in lizardcd-agent service (normally used with the `sidecars` value)
+    ##
+    extraPorts: []
+    ## @param agent.service.sessionAffinity Control where client requests go, to the same pod or round-robin
+    ## Values: ClientIP or None
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/service/
+    ##
+    sessionAffinity: None
+    ## @param agent.service.sessionAffinityConfig Additional settings for the sessionAffinity
+    ## sessionAffinityConfig:
+    ##   clientIP:
+    ##     timeoutSeconds: 300
+    ##
+    sessionAffinityConfig: {}
+  
+  ingress:
+    ## @param ingress.enabled Enable ingress resource for Management console
+    ##
+    enabled: false
+    ## @param ingress.path Path for the default host
+    ##
+    path: /
+    ## @param ingress.apiVersion Override API Version (automatically detected if not set)
+    ##
+    apiVersion: ""
+    ## @param ingress.pathType Ingress path type
+    ##
+    pathType: ImplementationSpecific
+    ## DEPRECATED: Use ingress.annotations instead of ingress.certManager
+    ## certManager: false
+    ##
+
+    ## @param ingress.hostname Default host for the ingress resource, a host pointing to this will be created
+    ##
+    hostname: lizardcd-agent.local
+    ## @param ingress.annotations Additional annotations for the Ingress resource. To enable certificate autogeneration, place here your cert-manager annotations.
+    ## For a full list of possible ingress annotations, please see
+    ## ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md
+    ## Use this parameter to set the required annotations for cert-manager, see
+    ## ref: https://cert-manager.io/docs/usage/ingress/#supported-annotations
+    ##
+    ## e.g:
+    ## annotations:
+    ##   kubernetes.io/ingress.class: nginx
+    ##   cert-manager.io/cluster-issuer: cluster-issuer-name
+    ##
+    annotations: {}
+    ## @param ingress.ingressClassName Set the ingerssClassName on the ingress record for k8s 1.18+
+    ## This is supported in Kubernetes 1.18+ and required if you have more than one IngressClass marked as the default for your cluster .
+    ## ref: https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/
+    ##
+    ingressClassName: ""
+    ## @param ingress.tls Enable TLS configuration for the hostname defined at ingress.hostname parameter
+    ## TLS certificates will be retrieved from a TLS secret with name: {{- printf "%s-tls" .Values.ingress.hostname | trunc 63 | trimSuffix "-" }}
+    ## or a custom one if you use the tls.existingSecret parameter
+    ## You can use the ingress.secrets parameter to create this TLS secret or relay on cert-manager to create it
+    ## Example:
+    ## existingSecret: name-of-existing-secret
+    ##
+    tls: false
+    ## @param ingress.extraHosts An array with additional hostname(s) to be covered with the ingress record
+    ## Most likely the hostname above will be enough, but in the event more hosts are needed, this is an array
+    ## extraHosts:
+    ## - name: lizardcd-agent.local
+    ##   path: /
+    ##
+    extraHosts: []
+    ## @param ingress.extraPaths Any additional arbitrary paths that may need to be added to the ingress under the main host.
+    ## For example: The ALB ingress controller requires a special rule for handling SSL redirection.
+    ## extraPaths:
+    ## - path: /*
+    ##   backend:
+    ##     serviceName: ssl-redirect
+    ##     servicePort: use-annotation
+    ##
+    extraPaths: []
+    ## @param ingress.selfSigned Create a TLS secret for this ingress record using self-signed certificates generated by Helm
+    ##
+    selfSigned: false
+    ## @param ingress.extraTls TLS configuration for additional hostname(s) to be covered with this ingress record
+    ## see: https://kubernetes.io/docs/concepts/services-networking/ingress/#tls
+    ## extraTls:
+    ## - hosts:
+    ##     - lizardcd-agent.local
+    ##   secretName: lizardcd-agent.local-tls
+    ##
+    extraTls: []
+    ## @param ingress.secrets If you're providing your own certificates, please use this to add the certificates as secrets
+    ## key and certificate should start with -----BEGIN CERTIFICATE----- or
+    ## -----BEGIN RSA PRIVATE KEY-----
+    ##
+    ## name should line up with a tlsSecret set further up
+    ## If you're using cert-manager, this is unneeded, as it will create the secret for you if it is not set
+    ##
+    ## It is also possible to create and manage the certificates outside of this helm chart
+    ## Please see README.md for more information
+    ## Example:
+    ## - name: lizardcd-agent.local-tls
+    ##   key:
+    ##   certificate:
+    ##
+    secrets: []
+    ## @param ingress.existingSecret It is you own the certificate as secret.
+    existingSecret: ""
+    ## @param ingress.extraRules Additional rules to be covered with this ingress record
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-rules
+    ## e.g:
+    ## extraRules:
+    ## - host: example.local
+    ##     http:
+    ##       path: /
+    ##       backend:
+    ##         service:
+    ##           name: example-svc
+    ##           port:
+    ##             name: http
+    ##
+    extraRules: []
+
+  resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+  ## @param agent.livenessProbe.enabled Enable/disable the liveness probe (agent-eligible nodes pod)
+  ## @param agent.livenessProbe.initialDelaySeconds Delay before liveness probe is initiated (agent-eligible nodes pod)
+  ## @param agent.livenessProbe.periodSeconds How often to perform the probe (agent-eligible nodes pod)
+  ## @param agent.livenessProbe.timeoutSeconds When the probe times out (agent-eligible nodes pod)
+  ## @param agent.livenessProbe.successThreshold Minimum consecutive successes for the probe to be considered successful after having failed (agent-eligible nodes pod)
+  ## @param agent.livenessProbe.failureThreshold Minimum consecutive failures for the probe to be considered failed after having succeeded
+  ##
+  livenessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 3
+  ## @param agent.readinessProbe.enabled Enable/disable the readiness probe (agent-eligible nodes pod)
+  ## @param agent.readinessProbe.initialDelaySeconds Delay before readiness probe is initiated (agent-eligible nodes pod)
+  ## @param agent.readinessProbe.periodSeconds How often to perform the probe (agent-eligible nodes pod)
+  ## @param agent.readinessProbe.timeoutSeconds When the probe times out (agent-eligible nodes pod)
+  ## @param agent.readinessProbe.successThreshold Minimum consecutive successes for the probe to be considered successful after having failed (agent-eligible nodes pod)
+  ## @param agent.readinessProbe.failureThreshold Minimum consecutive failures for the probe to be considered failed after having succeeded
+  ##
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    timeoutSeconds: 5
+    successThreshold: 1
+    failureThreshold: 3
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    # targetMemoryUtilizationPercentage: 80
+  ## @param agent.hostAliases pods host aliases
+  ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
+  ##
+  hostAliases: []
+  ## @param agent.updateStrategy.type lizardcd deployment strategy type. If persistence is enabled, strategy type should be set to Recreate to avoid dead locks.
+  ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
+  ##
+  updateStrategy:
+    ## StrategyType
+    ## Can be set to RollingUpdate or Recreate
+    ##
+    type: RollingUpdate
+  ## @param agent.terminationGracePeriodSeconds Seconds Redmine pod needs to terminate gracefully
+  ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod/#termination-of-pods
+  ##
+  terminationGracePeriodSeconds: ""
+  ## @param agent.schedulerName Name of the k8s scheduler (other than default) for lizardcd pods
+  ## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
+  ##
+  schedulerName: ""
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+ui:
+  enabled: true
+  replicaCount: 1
+  externalServer: {}
+  ## server: ""
+  ## port: 5117
+
+  image:
+    registry: docker.io
+    repository: lizardcd/lizardcd-ui
+    tag: "v0.3.0"
+    digest: ""
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+
+  fullnameOverride: ""
+  serviceAccount:
+  # Specifies whether a service account should be created
+    create: true
+  # Annotations to add to the service account
+    annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+    name: ""
+  ## @param alertmanager.serviceAccount.automountServiceAccountToken Automount service account token for the server service account
+    ##
+    automountServiceAccountToken: false
+  podAnnotations: {}
+
+  ## Configure Pods Security Context
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
+  ## @param ui.podSecurityContext.enabled Enabled ui-elegible pods' Security Context
+  ## @param ui.podSecurityContext.fsGroupChangePolicy Set filesystem group change policy
+  ## @param ui.podSecurityContext.sysctls Set kernel settings using the sysctl interface
+  ## @param ui.podSecurityContext.supplementalGroups Set filesystem extra groups
+  ## @param ui.podSecurityContext.fsGroup Set ui-elegible pod's Security Context fsGroup
+  ##
+  podSecurityContext:
+    enabled: true
+    fsGroupChangePolicy: Always
+    sysctls: []
+    supplementalGroups: []
+    fsGroup: 1001
+  ## Configue container's securityContext
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
+  ## @param ui.containerSecurityContext.enabled Enabled containers' Security Context
+  ## @param ui.containerSecurityContext.seLinuxOptions [object,nullable] Set SELinux options in container
+  ## @param ui.containerSecurityContext.runAsUser Set containers' Security Context runAsUser
+  ## @param ui.containerSecurityContext.runAsNonRoot Set container's Security Context runAsNonRoot
+  ## @param ui.containerSecurityContext.privileged Set container's Security Context privileged
+  ## @param ui.containerSecurityContext.readOnlyRootFilesystem Set container's Security Context readOnlyRootFilesystem
+  ## @param ui.containerSecurityContext.allowPrivilegeEscalation Set container's Security Context allowPrivilegeEscalation
+  ## @param ui.containerSecurityContext.capabilities.drop List of capabilities to be dropped
+  ## @param ui.containerSecurityContext.seccompProfile.type Set container's Security Context seccomp profile
+  ##
+  containerSecurityContext:
+    enabled: false
+    seLinuxOptions: null
+    runAsUser: 1001
+    runAsNonRoot: true
+    privileged: false
+    readOnlyRootFilesystem: false
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+    seccompProfile:
+      type: "RuntimeDefault"
+
+  service:
+    ## @param service.enabled Use a service to access lizardcd Ui
+    ##
+    enabled: true
+    ## @param ui.service.type lizardcd-ui service type
+    ##
+    type: LoadBalancer
+    ## @param ui.service.ports.http lizardcd-ui service HTTP port
+    ##
+    ports:
+      http: 80
+    ## Node ports to expose
+    ## @param ui.service.nodePorts.http Node port for HTTP
+    ## NOTE: choose port between <30000-32767>
+    ##
+    nodePorts:
+      http: ""
+    ## @param ui.service.clusterIP lizardcd-ui service Cluster IP
+    ## e.g.:
+    ## clusterIP: None
+    ##
+    clusterIP: ""
+    ## @param ui.service.loadBalancerIP lizardcd-ui service Load Balancer IP
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-loadbalancer
+    ##
+    loadBalancerIP: ""
+    ## @param ui.service.loadBalancerClass lizardcd-ui service Load Balancer class if service type is `LoadBalancer` (optional, cloud specific)
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-loadbalancer
+    ##
+    loadBalancerClass: ""
+    ## @param ui.service.loadBalancerSourceRanges lizardcd-ui service Load Balancer sources
+    ## ref: https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
+    ## e.g:
+    ## loadBalancerSourceRanges:
+    ##   - 10.10.10.0/24
+    ##
+    loadBalancerSourceRanges: []
+    ## @param ui.service.externalTrafficPolicy lizardcd-ui service external traffic policy
+    ## ref http://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+    ##
+    externalTrafficPolicy: Cluster
+    ## @param ui.service.annotations Additional custom annotations for lizardcd-ui service
+    ##
+    annotations: {}
+    ## @param ui.service.extraPorts Extra ports to expose in lizardcd-ui service (normally used with the `sidecars` value)
+    ##
+    extraPorts: []
+    ## @param ui.service.sessionAffinity Control where client requests go, to the same pod or round-robin
+    ## Values: ClientIP or None
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/service/
+    ##
+    sessionAffinity: None
+    ## @param ui.service.sessionAffinityConfig Additional settings for the sessionAffinity
+    ## sessionAffinityConfig:
+    ##   clientIP:
+    ##     timeoutSeconds: 300
+    ##
+    sessionAffinityConfig: {}
+  
+  resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    # targetMemoryUtilizationPercentage: 80
+  ingress:
+    ## @param ingress.enabled Enable ingress resource for Management console
+    ##
+    enabled: false
+    ## @param ingress.path Path for the default host
+    ##
+    path: /
+    ## @param ingress.apiVersion Override API Version (automatically detected if not set)
+    ##
+    apiVersion: ""
+    ## @param ingress.pathType Ingress path type
+    ##
+    pathType: ImplementationSpecific
+    ## DEPRECATED: Use ingress.annotations instead of ingress.certManager
+    ## certManager: false
+    ##
+
+    ## @param ingress.hostname Default host for the ingress resource, a host pointing to this will be created
+    ##
+    hostname: lizardcd-ui.local
+    ## @param ingress.annotations Additional annotations for the Ingress resource. To enable certificate autogeneration, place here your cert-manager annotations.
+    ## For a full list of possible ingress annotations, please see
+    ## ref: https://github.com/kubernetes/ingress-nginx/blob/main/docs/user-guide/nginx-configuration/annotations.md
+    ## Use this parameter to set the required annotations for cert-manager, see
+    ## ref: https://cert-manager.io/docs/usage/ingress/#supported-annotations
+    ##
+    ## e.g:
+    ## annotations:
+    ##   kubernetes.io/ingress.class: nginx
+    ##   cert-manager.io/cluster-issuer: cluster-issuer-name
+    ##
+    annotations: {}
+    ## @param ingress.ingressClassName Set the ingerssClassName on the ingress record for k8s 1.18+
+    ## This is supported in Kubernetes 1.18+ and required if you have more than one IngressClass marked as the default for your cluster .
+    ## ref: https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/
+    ##
+    ingressClassName: ""
+    ## @param ingress.tls Enable TLS configuration for the hostname defined at ingress.hostname parameter
+    ## TLS certificates will be retrieved from a TLS secret with name: {{- printf "%s-tls" .Values.ingress.hostname | trunc 63 | trimSuffix "-" }}
+    ## or a custom one if you use the tls.existingSecret parameter
+    ## You can use the ingress.secrets parameter to create this TLS secret or relay on cert-manager to create it
+    ## Example:
+    ## existingSecret: name-of-existing-secret
+    ##
+    tls: false
+    ## @param ingress.extraHosts An array with additional hostname(s) to be covered with the ingress record
+    ## Most likely the hostname above will be enough, but in the event more hosts are needed, this is an array
+    ## extraHosts:
+    ## - name: lizardcd-ui.local
+    ##   path: /
+    ##
+    extraHosts: []
+    ## @param ingress.extraPaths Any additional arbitrary paths that may need to be added to the ingress under the main host.
+    ## For example: The ALB ingress controller requires a special rule for handling SSL redirection.
+    ## extraPaths:
+    ## - path: /*
+    ##   backend:
+    ##     serviceName: ssl-redirect
+    ##     servicePort: use-annotation
+    ##
+    extraPaths: []
+    ## @param ingress.selfSigned Create a TLS secret for this ingress record using self-signed certificates generated by Helm
+    ##
+    selfSigned: false
+    ## @param ingress.extraTls TLS configuration for additional hostname(s) to be covered with this ingress record
+    ## see: https://kubernetes.io/docs/concepts/services-networking/ingress/#tls
+    ## extraTls:
+    ## - hosts:
+    ##     - lizardcd-ui.local
+    ##   secretName: lizardcd-ui.local-tls
+    ##
+    extraTls: []
+    ## @param ingress.secrets If you're providing your own certificates, please use this to add the certificates as secrets
+    ## key and certificate should start with -----BEGIN CERTIFICATE----- or
+    ## -----BEGIN RSA PRIVATE KEY-----
+    ##
+    ## name should line up with a tlsSecret set further up
+    ## If you're using cert-manager, this is unneeded, as it will create the secret for you if it is not set
+    ##
+    ## It is also possible to create and manage the certificates outside of this helm chart
+    ## Please see README.md for more information
+    ## Example:
+    ## - name: lizardcd-ui.local-tls
+    ##   key:
+    ##   certificate:
+    ##
+    secrets: []
+    ## @param ingress.existingSecret It is you own the certificate as secret.
+    existingSecret: ""
+    ## @param ingress.extraRules Additional rules to be covered with this ingress record
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/#ingress-rules
+    ## e.g:
+    ## extraRules:
+    ## - host: example.local
+    ##     http:
+    ##       path: /
+    ##       backend:
+    ##         service:
+    ##           name: example-svc
+    ##           port:
+    ##             name: http
+    ##
+    extraRules: []
+
+  ## @param ui.hostAliases pods host aliases
+  ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
+  ##
+  hostAliases: []
+  nodeSelector: {}
+
+  tolerations: []
+  ## @param ui.updateStrategy.type lizardcd deployment strategy type. If persistence is enabled, strategy type should be set to Recreate to avoid dead locks.
+  ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
+  ##
+  updateStrategy:
+    ## StrategyType
+    ## Can be set to RollingUpdate or Recreate
+    ##
+    type: RollingUpdate
+  ## @param ui.terminationGracePeriodSeconds Seconds Redmine pod needs to terminate gracefully
+  ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod/#termination-of-pods
+  ##
+  terminationGracePeriodSeconds: ""
+  ## @param ui.schedulerName Name of the k8s scheduler (other than default) for lizardcd pods
+  ## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
+  ##
+  schedulerName: ""
+  affinity: {}
+## @section External consul paramaters
+##
+externalConsul: {}
+  ##consul_host: ""
+
+## @section consul subchart parameters
+##
+## @param consul.enabled Deploy consul subchart
+## @param consul.replicaCount Number of consul instances
+## @param consul.service.ports.client consul client port
+##
+consul:
+  enabled: false
+  image:
+    registry: docker.io
+    repository: bitnami/consul
+    tag: 1.14.3-debian-11-r0
+    pullPolicy: IfNotPresent
+  replicaCount: 3
+  service:
+    ports: 
+      http: 80
+  persistence:
+    enabled: true
+    storageClass: "local"
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+## @section etcd subchart parameters
+##
+## @param etcd.enabled Deploy etcd subchart
+## @param etcd.replicaCount Number of etcd instances
+## @param etcd.service.ports.client etcd client port
+##
+etcd:
+  enabled: true
+  image:
+    registry: docker.io
+    repository: bitnami/etcd
+    tag: 3.4.31-debian-12-r3
+    pullPolicy: IfNotPresent
+  replicaCount: 3
+  ports:
+    client: 2379
+    peer: 2380
+    metrics: 9090
+  persistence:
+    enabled: true
+    storageClass: "local"
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+
+initJob:
+  ## Specifies the number of job retries
+  setup:
+    backoffLimit: 3
+  resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+  ## Configue container's securityContext
+  containerSecurityContext: {}
+  ## Configure Pods Security Context
+  securityContext: {}
+  image:
+    registry: docker.io
+    repository: lizardcd/migrate
+    tag: "v0.1.0"
+    digest: ""
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  persistence:
+    storageClass: "nfs-client"
+    accessModes:
+      - ReadWriteMany
+    size: 8Gi
+  fullnameOverride: ""
+  serviceAccount:
+  # Specifies whether a service account should be created
+    create: true
+  # Annotations to add to the service account
+    annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+    name: ""
+  ## @param alertmanager.serviceAccount.automountServiceAccountToken Automount service account token for the server service account
+    ##
+    automountServiceAccountToken: false 

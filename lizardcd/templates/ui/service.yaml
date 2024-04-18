@@ -1,0 +1,46 @@
+{{- if .Values.ui.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "lizardcd.ui.fullname" . }}
+  labels:
+    {{- include "lizardcd.ui.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.ui.service.type }}
+  {{- if and .Values.ui.service.clusterIP (eq .Values.ui.service.type "ClusterIP") }}
+  clusterIP: {{ .Values.ui.service.clusterIP }}
+  {{- end }}
+  {{- if .Values.ui.service.sessionAffinity }}
+  sessionAffinity: {{ .Values.ui.service.sessionAffinity }}
+  {{- end }}
+  {{- if .Values.ui.service.sessionAffinityConfig }}
+  sessionAffinityConfig: {{- include "common.tplvalues.render" (dict "value" .Values.ui.service.sessionAffinityConfig "context" $) | nindent 4 }}
+  {{- end }}
+  {{- if or (eq .Values.ui.service.type "LoadBalancer") (eq .Values.ui.service.type "NodePort") }}
+  externalTrafficPolicy: {{ .Values.ui.service.externalTrafficPolicy | quote }}
+  {{- end }}
+  {{- if and (eq .Values.ui.service.type "LoadBalancer") (not (empty .Values.ui.service.loadBalancerSourceRanges)) }}
+  loadBalancerSourceRanges: {{ .Values.ui.service.loadBalancerSourceRanges }}
+  {{- end }}
+  {{- if and (eq .Values.ui.service.type "LoadBalancer") (not (empty .Values.ui.service.loadBalancerIP)) }}
+  loadBalancerIP: {{ .Values.ui.service.loadBalancerIP }}
+  {{- end }}
+  {{- if and (eq .Values.ui.service.type "LoadBalancer") (not (empty .Values.ui.service.loadBalancerClass)) }}
+  loadBalancerClass: {{ .Values.ui.service.loadBalancerClass }}
+  {{- end }}
+  ports:
+    - name: http
+      port: {{ .Values.ui.service.ports.http }}
+      protocol: TCP
+      targetPort: http
+      {{- if and (or (eq .Values.ui.service.type "NodePort") (eq .Values.ui.service.type "LoadBalancer")) (not (empty .Values.ui.service.nodePorts.http)) }}
+      nodePort: {{ .Values.ui.service.nodePorts.http }}
+      {{- else if eq .Values.ui.service.type "ClusterIP" }}
+      nodePort: null
+      {{- end }}
+    {{- if .Values.ui.service.extraPorts }}
+    {{- include "common.tplvalues.render" (dict "value" .Values.ui.service.extraPorts "context" $) | nindent 4 }}
+    {{- end }}
+  selector: 
+    {{- include "lizardcd.ui.selectorLabels" . | nindent 6 }}
+{{- end }}

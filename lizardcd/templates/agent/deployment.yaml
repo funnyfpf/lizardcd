@@ -1,0 +1,102 @@
+{{- if (include "lizardcd.agent.enabled" .) }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "lizardcd.agent.fullname" . }}
+  labels:
+    {{- include "lizardcd.agent.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.agent.autoscaling.enabled }}
+  replicas: {{ .Values.agent.replicaCount }}
+  {{- end }}
+  {{- if .Values.agent.updateStrategy }}
+  strategy: {{- toYaml .Values.agent.updateStrategy | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "lizardcd.agent.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.agent.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "lizardcd.agent.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- include "lizardcd.imagePullSecrets" . | nindent 6 }}
+      serviceAccountName: {{ include "lizardcd.agent.serviceAccountName" . }}
+      {{- if .Values.agent.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.agent.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.agent.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.agent.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: host-time 
+          hostPath:
+            path: /etc/localtime
+        - name: agent-config
+          configMap:
+            name: lizardcd
+      containers:
+        - name: {{ include "lizardcd.agent.fullname" . }}-container
+          {{- if .Values.agent.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.agent.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          image: "{{ include "lizardcd.agent.image" . }}"
+          imagePullPolicy: {{ .Values.agent.image.pullPolicy }}
+          args:
+            - '-f'
+            - '/etc/config/lizardcd-agent.yaml'
+          ports:
+            - name: grpc
+              containerPort: 5017
+              protocol: TCP
+            - name: metrics
+              containerPort: 15017
+              protocol: TCP
+          volumeMounts:
+            - name: host-time 
+              mountPath: /etc/localtime 
+            - name: agent-config 
+              mountPath: /etc/config/lizardcd-agent.yaml
+              subPath: lizardcd-agent.yaml 
+          {{- if .Values.agent.resources }}
+          resources: {{- include "common.tplvalues.render" (dict "value" .Values.agent.resources "context" $) | nindent 12 }}
+          {{- end }}
+
+          {{- if .Values.agent.livenessProbe.enabled }}
+          livenessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.agent.livenessProbe "enabled") "context" $) | nindent 12 }}
+            httpGet:
+              path: /metrics
+              port: 15017
+              scheme: HTTP
+          {{- end }}
+          {{- if .Values.agent.readinessProbe.enabled }}
+          readinessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.agent.readinessProbe "enabled") "context" $) | nindent 12 }}
+            httpGet:
+              path: /metrics
+              port: 15017
+              scheme: HTTP
+          {{- end }}
+      {{- with .Values.agent.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.agent.schedulerName }}
+      schedulerName: {{ .Values.agent.schedulerName | quote }}
+      {{- end }}
+      {{- with .Values.agent.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.agent.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.agent.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.agent.terminationGracePeriodSeconds }}
+      {{- end }}
+{{- end -}}
+

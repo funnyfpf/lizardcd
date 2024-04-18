@@ -1,0 +1,80 @@
+{{- if (include "lizardcd.ui.enabled" .) }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "lizardcd.ui.fullname" . }}
+  labels:
+    {{- include "lizardcd.ui.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.ui.autoscaling.enabled }}
+  replicas: {{ .Values.ui.replicaCount }}
+  {{- end }}
+  {{- if .Values.ui.updateStrategy }}
+  strategy: {{- toYaml .Values.ui.updateStrategy | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "lizardcd.ui.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.ui.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "lizardcd.ui.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- include "lizardcd.imagePullSecrets" . | nindent 6 }}
+      serviceAccountName: {{ include "lizardcd.ui.serviceAccountName" . }}
+      {{- if .Values.ui.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.ui.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.ui.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.ui.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: host-time 
+          hostPath:
+            path: /etc/localtime
+        - name: ui-config
+          configMap:
+            name: lizardcd
+      containers:
+        - name: {{ include "lizardcd.ui.fullname" . }}-container
+          {{- if .Values.ui.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.ui.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          image: "{{ include "lizardcd.ui.image" . }}"
+          imagePullPolicy: {{ .Values.ui.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          volumeMounts:
+            - name: host-time 
+              mountPath: /etc/localtime 
+            - name: ui-config 
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+          resources:
+            {{- toYaml .Values.ui.resources | nindent 12 }}
+      {{- with .Values.ui.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.ui.schedulerName }}
+      schedulerName: {{ .Values.ui.schedulerName | quote }}
+      {{- end }}
+      {{- with .Values.ui.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ui.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.ui.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.ui.terminationGracePeriodSeconds }}
+      {{- end }}
+{{- end -}}
+

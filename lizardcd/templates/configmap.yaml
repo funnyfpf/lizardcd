@@ -1,0 +1,162 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lizardcd
+  namespace: {{ include "common.names.namespace" . | quote }}
+  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.commonLabels "context" $ ) | nindent 4 }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+
+data: 
+  {{- if (include "lizardcd.ui.enabled" .) }}
+  nginx.conf: |
+    user  nginx;
+    worker_processes  auto;
+    error_log  /var/log/nginx/error.log warn;
+    pid        /tmp/nginx.pid;
+    events {
+      worker_connections  8192;
+    }
+    http {
+      include       /etc/nginx/mime.types;
+      default_type  application/octet-stream;
+      log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                        '$status $body_bytes_sent "$http_referer" '
+                        '"$http_user_agent" "$http_x_forwarded_for" '
+                        '"$upstream_addr" $request_time $upstream_response_time';
+      access_log  /var/log/nginx/access.log  main;
+      sendfile        on;
+      keepalive_timeout  65;
+      client_max_body_size 100m;
+      server {
+        listen       80;
+        server_name  localhost;
+        
+        location / {
+          root   /usr/share/nginx/html;
+          index  index.html;
+          try_files $uri $uri/ /index.html;
+        }
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+          root   /usr/share/nginx/html;
+        }
+
+        # Todo: To be removed after frondend adjusted to real service labels.
+        location /kubernetes {
+          # proxy_http_version 1.1;
+          proxy_set_header Host $proxy_host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          {{- if .Values.ui.externalServer }}
+          proxy_pass http://{{ include "lizardcd.ui.externalServer" .}};
+          {{- else }}
+          proxy_pass http://{{ include "lizardcd.server.fullname" . }}:5117;
+          {{- end }}
+        }
+        location /lizardcd {
+          # proxy_http_version 1.1;
+          proxy_set_header Host $proxy_host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          {{- if .Values.ui.externalServer }}
+          proxy_pass http://{{ include "lizardcd.ui.externalServer" .}};
+          {{- else }}
+          proxy_pass http://{{ include "lizardcd.server.fullname" . }}:5117;
+          {{- end }}
+        }
+        location /db {
+          # proxy_http_version 1.1;
+          proxy_set_header Host $proxy_host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_pass http://{{ include "lizardcd.server.fullname" . }}:5117;
+        }
+        location /auth {
+          # proxy_http_version 1.1;
+          proxy_set_header Host $proxy_host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_pass http://{{ include "lizardcd.server.fullname" . }}:5117;
+        }
+      }
+    }
+  {{- end }}
+  {{- if  (include "lizardcd.server.enabled" .) }}
+  lizardcd-server.yaml: |
+    Name: lizardServer
+    Host: 0.0.0.0
+    Port: 5117
+    Timeout: 60000
+    Log:
+      Encoding: plain
+      Level: info 
+    Prometheus:
+      Host: 0.0.0.0
+      Port: 15117
+      Path: /metrics
+    Auth:
+      AccessSecret: wLnOk8keh/WO5u7lX8H1dB1/mcuHvnI/jfWCMXMPg9o=
+      AccessExpire: 86400
+    {{- if or .Values.consul.enabled .Values.externalConsul.consul_host }}
+    Consul:
+      Address: {{- include "lizardcd.consulhost" . }}
+    {{- end }}
+    {{- if .Values.etcd.enabled }}
+    {{- $replicaCount := int .Values.etcd.replicaCount }}
+    {{- $releaseNamespace := .Release.Namespace }}
+    {{- $etcdFullname := include "lizardcd.etcdhost" . }}
+    {{- $etcdHeadlessServiceName := (printf "%s-%s" $etcdFullname "headless" | trunc 63 | trimSuffix "-") }}
+    {{- $clientPort := int .Values.etcd.ports.client }}
+    {{- $initialCluster := list }}
+        {{- range $e, $i := until $replicaCount }}
+        {{- $initialCluster = append $initialCluster (printf "%s-%d.%s.%s.svc.cluster.local:%d" $etcdFullname $i $etcdHeadlessServiceName $releaseNamespace $clientPort) }}
+        {{- end }}
+    Etcd:
+      Address: {{ join "," $initialCluster | quote }} 
+    {{- end }}
+    Sqlite: /var/data/lizardcd/lizardcd.db
+  {{- end }}
+  {{- if  (include "lizardcd.agent.enabled" .) }}
+  lizardcd-agent.yaml: |
+    Name: LizardAgent
+    ListenOn: 0.0.0.0:5017
+    Timeout: 60000
+    Log:
+      Encoding: plain
+      Level: info 
+    Prometheus:
+      Host: 0.0.0.0
+      Port: 15017
+      Path: /metrics
+    {{- if .Values.etcd.enabled }}
+    {{- $replicaCount := int .Values.etcd.replicaCount }}
+    {{- $releaseNamespace := .Release.Namespace }}
+    {{- $etcdFullname := include "lizardcd.etcdhost" . }}
+    {{- $etcdHeadlessServiceName := (printf "%s-%s" $etcdFullname "headless" | trunc 63 | trimSuffix "-") }}
+    {{- $clientPort := int .Values.etcd.ports.client }}
+    {{- $initialCluster := list }}
+        {{- range $e, $i := until $replicaCount }}
+        {{- $initialCluster = append $initialCluster (printf "%s-%d.%s.%s.svc.cluster.local:%d" $etcdFullname $i $etcdHeadlessServiceName $releaseNamespace $clientPort) }}
+        {{- end }}
+    etcd:
+      hosts:  
+        {{- range $e, $i := $initialCluster }}
+        {{- print "- " $i | nindent 8 }}
+        {{- end }}
+      Key: lizardcd-agent.{{ include "common.names.namespace" . }}.{{ .Values.agent.clusterName }}
+    {{- end }}
+    {{- if or .Values.consul.enabled .Values.externalConsul.consul_host }}
+    Consul:
+      Host: {{- include "lizardcd.consulhost" . }}
+      Key: lizardcd-agent.{{ include "common.names.namespace" . }}.{{ .Values.agent.clusterName }}
+      Meta:
+        Protocol: grpc
+        Service: {{ include "lizardcd.agent.fullname" . }}
+        Namespace: {{ include "common.names.namespace" . }}
+        Cluster: {{ .Values.agent.clusterName }}
+      TTL: 60
+    {{- end }}
+  {{- end }}
+

@@ -1,0 +1,105 @@
+{{- if (include "lizardcd.server.enabled" .) }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "lizardcd.server.fullname" . }}
+  labels:
+    {{- include "lizardcd.server.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.server.autoscaling.enabled }}
+  replicas: {{ .Values.server.replicaCount }}
+  {{- end }}
+  {{- if .Values.server.updateStrategy }}
+  strategy: {{- toYaml .Values.server.updateStrategy | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "lizardcd.server.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.server.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "lizardcd.server.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- include "lizardcd.imagePullSecrets" . | nindent 6 }}
+      serviceAccountName: {{ include "lizardcd.server.serviceAccountName" . }}
+      {{- if .Values.server.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.server.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.server.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.server.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: host-time 
+          hostPath:
+            path: /etc/localtime
+        - name: lizardcd-data
+          persistentVolumeClaim:
+            claimName: lizardcd-data
+        - name: server-config
+          configMap:
+            name: lizardcd
+      containers:
+        - name: {{ include "lizardcd.server.fullname" . }}-container
+          {{- if .Values.server.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.server.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          image: "{{ include "lizardcd.server.image" . }}"
+          imagePullPolicy: {{ .Values.server.image.pullPolicy }}
+          args:
+            - '-f'
+            - '/etc/config/lizardcd-server.yaml'
+          ports:
+            - name: grpc
+              containerPort: 5117
+              protocol: TCP
+            - name: metrics
+              containerPort: 15117
+              protocol: TCP
+          volumeMounts:
+            - name: host-time 
+              mountPath: /etc/localtime 
+            - name: lizardcd-data
+              mountPath: /var/data/lizardcd/
+            - name: server-config 
+              mountPath: /etc/config/lizardcd-server.yaml
+              subPath: lizardcd-server.yaml 
+          {{- if .Values.server.resources }}
+          resources: {{- include "common.tplvalues.render" (dict "value" .Values.server.resources "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.server.livenessProbe.enabled }}
+          livenessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.server.livenessProbe "enabled") "context" $) | nindent 12 }}
+            httpGet:
+              path: /metrics
+              port: 15117
+              scheme: HTTP
+          {{- end }}
+          {{- if .Values.server.readinessProbe.enabled }}
+          readinessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.server.readinessProbe "enabled") "context" $) | nindent 12 }}
+            httpGet:
+              path: /metrics
+              port: 15117
+              scheme: HTTP
+          {{- end }}
+      {{- with .Values.server.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.server.schedulerName }}
+      schedulerName: {{ .Values.server.schedulerName | quote }}
+      {{- end }}
+      {{- with .Values.server.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.server.tolerations }}
+      {{- if .Values.server.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.server.terminationGracePeriodSeconds }}
+      {{- end }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end -}}
