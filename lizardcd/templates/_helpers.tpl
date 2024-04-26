@@ -104,6 +104,39 @@ If release name contains chart name it will be used as a full name.
 {{- end -}}
 {{- end -}}
 
+{{- define "lizardcd.nacos.namespaceId" -}}
+{{- if .Values.nacos.enabled -}}
+{{- default "public" .Values.nacos.namespaceId }}
+{{- else }}
+{{- .Values.externalNacos.namespaceId }}
+{{- end -}}
+{{- end -}}
+
+{{- define "lizardcd.nacos.group" -}}
+{{- if .Values.nacos.enabled -}}
+{{- default "lizardcd" .Values.nacos.group }}
+{{- else }}
+{{- .Values.externalNacos.group }}
+{{- end }}
+{{- end }}
+
+{{- define "lizardcd.nacos.username" -}}
+{{- if .Values.nacos.enabled -}}
+{{- default "nacos" .Values.nacos.nacos.storage.db.username }}
+{{- else }}
+{{- .Values.externalNacos.username }}
+{{- end }}
+{{- end }}
+
+{{- define "lizardcd.nacos.password" -}}
+{{- if .Values.nacos.enabled -}}
+{{- default "nacos" .Values.nacos.nacos.storage.db.password }}
+{{- else }}
+{{- .Values.externalNacos.password }}
+{{- end }}
+{{- end }}
+
+
 {{- define "lizardcd.etcdhost" -}}
 {{- if .Values.etcd.enabled -}}
 {{- $name := "etcd" }}

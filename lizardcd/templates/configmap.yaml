@@ -103,6 +103,22 @@ data:
     Consul:
       Address: {{- include "lizardcd.consulhost" . }}
     {{- end }}
+    {{- if or .Values.nacos.enabled .Values.externalNacos.nacos_host }}
+    Nacos:
+      {{- if and .Values.nacos.enabled (eq .Values.nacos.nacos.mode "cluster") -}} 
+      {{- $name := "nacos-hs" }}  
+      Address: {{ printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+      {{- else if and .Values.nacos.enabled (eq .Values.nacos.nacos.mode "standalone") -}}
+      {{- $name := "nacos" }} 
+      Address: {{ printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+      {{- else }} 
+      Address: {{ .Values.externalNacos.nacos_host -}}  
+      {{- end }}   
+      NamespaceId: {{ include "lizardcd.nacos.namespaceId" . }}
+      Group: {{ include "lizardcd.nacos.group" . }}
+      Username: {{ include "lizardcd.nacos.username" . }}
+      Password: {{ include "lizardcd.nacos.password" . }}
+    {{- end }}
     {{- if .Values.etcd.enabled }}
     {{- $replicaCount := int .Values.etcd.replicaCount }}
     {{- $releaseNamespace := .Release.Namespace }}
@@ -147,9 +163,26 @@ data:
         {{- end }}
       Key: lizardcd-agent.{{ include "common.names.namespace" . }}.{{ .Values.agent.clusterName }}
     {{- end }}
+    {{- if or .Values.nacos.enabled .Values.externalNacos.nacos_host }}
+    Nacos:
+      {{- if and .Values.nacos.enabled (eq .Values.nacos.nacos.mode "cluster") -}} 
+      {{- $name := "nacos-hs" }}  
+      Host: {{ printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+      {{- else if and .Values.nacos.enabled (eq .Values.nacos.nacos.mode "standalone") -}}
+      {{- $name := "nacos" }} 
+      Host: {{ printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+      {{- else }} 
+      Host: {{ .Values.externalNacos.nacos_host -}}  
+      {{- end }}   
+      Key: lizardcd-agent.{{ include "common.names.namespace" . }}.{{ .Values.agent.clusterName }}
+      NamespaceId: {{ include "lizardcd.nacos.namespaceId" . }}
+      Group: {{ include "lizardcd.nacos.group" . }}
+      Username: {{ include "lizardcd.nacos.username" . }}
+      Password: {{ include "lizardcd.nacos.password" . }}
+    {{- end }}
     {{- if or .Values.consul.enabled .Values.externalConsul.consul_host }}
     Consul:
-      Host: {{- include "lizardcd.consulhost" . }}
+      Host: {{ include "lizardcd.consulhost" . }}
       Key: lizardcd-agent.{{ include "common.names.namespace" . }}.{{ .Values.agent.clusterName }}
       Meta:
         Protocol: grpc

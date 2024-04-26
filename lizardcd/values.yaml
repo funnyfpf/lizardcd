@@ -989,6 +989,54 @@ consul:
     accessModes:
       - ReadWriteOnce
     size: 8Gi
+## @section External nacos paramaters
+##
+externalNacos: {}
+  ## nacos_host: ""
+  ## username: ""
+  ## password: ""
+  ## namespaceId: ""
+  ## group: ""
+  ## Meta:   # custom your metadata here 
+  ##   Protocol: grpc
+  ##   Service: lizardcd-agent
+  ##   Namespace: dev
+  ##   Cluster: devk8s
+## @section consul subchart parameters
+##
+## @param consul.enabled Deploy consul subchart
+## @param consul.replicaCount Number of consul instances
+## @param consul.service.ports.client consul client port
+##
+nacos: 
+  enabled: false
+  nacos:
+    image:
+      registry: docker.io
+      repository: nacos/nacos-server
+      tag: v2.2.3
+      pullPolicy: IfNotPresent
+    mode: standalone
+    storage:
+      type: embedded
+      db:
+        host: localhost
+        name: nacos
+        port: 3306
+        username: nacos
+        password: nacos
+        param: characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=false
+  namespaceId: ""
+  group: ""
+  persistence:
+    enabled: true
+    data:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: nfs-client
+      resources:
+        requests:
+          storage: 2Gi
 ## @section etcd subchart parameters
 ##
 ## @param etcd.enabled Deploy etcd subchart
