@@ -80,6 +80,20 @@ data:
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
           proxy_pass http://{{ include "lizardcd.server.fullname" . }}:5117;
         }
+        location /swagger {
+          # proxy_http_version 1.1;
+          proxy_set_header Host $proxy_host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_pass http://{{ include "lizardcd.ui.fullname" . }}:8080/;
+        }
+        location /server-static {
+          # proxy_http_version 1.1;
+          proxy_set_header Host $proxy_host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_pass http://{{ include "lizardcd.server.fullname" . }}:5117;
+        }
       }
     }
   {{- end }}

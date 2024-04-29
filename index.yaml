@@ -2,8 +2,42 @@ apiVersion: v1
 entries:
   lizardcd:
   - apiVersion: v2
+    appVersion: 2.0.0
+    created: "2024-04-29T14:29:44.08984102+08:00"
+    dependencies:
+    - condition: consul.enabled
+      name: consul
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: 10.x.x
+    - condition: etcd.enabled
+      name: etcd
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: 9.x.x
+    - condition: nacos.enabled
+      name: nacos
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: 0.x.x
+    - name: common
+      repository: oci://registry-1.docker.io/bitnamicharts
+      tags:
+      - bitnami-common
+      version: 2.x.x
+    description: Lizardcd is a cloud native continuous delivery project, which is
+      a server-agent mode architecture based on go-zero framework . It's composed
+      of lizardcd-server, lizardcd-agent, lizardcd-ui and lizardcd-cli.
+    digest: 8d684dbd510e05437aafc3472b62039656e51a49d660d4345a1cabe6a0a35d4c
+    home: https://github.com/hongyuxuan/lizardcd
+    icon: https://camo.githubusercontent.com/bc6ae9a618e70856d6b7ac1518c9230867834326589b0c20dfbee4a2a8a62316/68747470733a2f2f70726f6a6563742d313235353534373530302e636f732e61702d6265696a696e672e6d7971636c6f75642e636f6d2f6c697a61726463642532466c697a61726463642d6c6f676f2e6a7067
+    maintainers:
+    - name: lizardcd
+    name: lizardcd
+    type: application
+    urls:
+    - lizardcd-2.0.0.tgz
+    version: 2.0.0
+  - apiVersion: v2
     appVersion: 1.3.0
-    created: "2024-04-26T16:41:43.324070554+08:00"
+    created: "2024-04-29T14:29:44.077262139+08:00"
     dependencies:
     - condition: consul.enabled
       name: consul
@@ -37,7 +71,7 @@ entries:
     version: 1.3.0
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2024-04-26T16:41:43.314605939+08:00"
+    created: "2024-04-29T14:29:44.068072779+08:00"
     dependencies:
     - condition: consul.enabled
       name: consul
@@ -67,7 +101,7 @@ entries:
     version: 1.2.0
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2024-04-26T16:41:43.304913593+08:00"
+    created: "2024-04-29T14:29:44.058149691+08:00"
     dependencies:
     - condition: consul.enabled
       name: consul
@@ -93,7 +127,7 @@ entries:
     version: 1.1.0
   - apiVersion: v2
     appVersion: 0.0.1
-    created: "2024-04-26T16:41:43.299659615+08:00"
+    created: "2024-04-29T14:29:44.052868414+08:00"
     dependencies:
     - condition: consul.enabled
       name: consul
@@ -117,4 +151,4 @@ entries:
     urls:
     - lizardcd-1.0.0.tgz
     version: 1.0.0
-generated: "2024-04-26T16:41:43.292241756+08:00"
+generated: "2024-04-29T14:29:44.044988886+08:00"

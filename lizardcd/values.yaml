@@ -21,7 +21,7 @@ server:
     registry: docker.io
     repository: lizardcd/lizardcd-server 
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "v0.3.0"
+    tag: "v1.0.0"
     digest: ""
     pullPolicy: IfNotPresent
     pullSecrets: []    
@@ -89,7 +89,7 @@ server:
   ## @param server.containerSecurityContext.seccompProfile.type Set container's Security Context seccomp profile
   ##
   containerSecurityContext:
-    enabled: true
+    enabled: false
     seLinuxOptions: null
     runAsUser: 1001
     runAsNonRoot: true
@@ -273,11 +273,11 @@ server:
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
   # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
+  #   cpu: 200m
+  #   memory: 500Mi
   # requests:
   #   cpu: 100m
-  #   memory: 128Mi
+  #   memory: 250Mi
 
   ## @param server.livenessProbe.enabled Enable/disable the liveness probe (server-eligible nodes pod)
   ## @param server.livenessProbe.initialDelaySeconds Delay before liveness probe is initiated (server-eligible nodes pod)
@@ -346,7 +346,7 @@ agent:
   image:
     registry: docker.io
     repository: lizardcd/lizardcd-agent
-    tag: "v0.3.0"
+    tag: "v1.0.0"
     digest: ""
     pullPolicy: IfNotPresent
     pullSecrets: []
@@ -437,7 +437,7 @@ agent:
   ## @param agent.containerSecurityContext.seccompProfile.type Set container's Security Context seccomp profile
   ##
   containerSecurityContext:
-    enabled: true
+    enabled: false
     seLinuxOptions: null
     runAsUser: 1001
     runAsNonRoot: true
@@ -451,7 +451,7 @@ agent:
 
   ## Specify the name of the cluster where the agent resides
   ##
-  clusterName: "bdevk8s"
+  clusterName: "k8s"
   service:
     ## @param service.enabled Use a service to access lizardcd Agent
     ##
@@ -698,7 +698,7 @@ ui:
   image:
     registry: docker.io
     repository: lizardcd/lizardcd-ui
-    tag: "v0.3.0"
+    tag: "v1.0.0"
     digest: ""
     pullPolicy: IfNotPresent
     pullSecrets: []
@@ -762,7 +762,7 @@ ui:
     enabled: true
     ## @param ui.service.type lizardcd-ui service type
     ##
-    type: LoadBalancer
+    type: ClusterIP
     ## @param ui.service.ports.http lizardcd-ui service HTTP port
     ##
     ports:
@@ -985,7 +985,7 @@ consul:
       http: 80
   persistence:
     enabled: true
-    storageClass: "local"
+    storageClass: ""
     accessModes:
       - ReadWriteOnce
     size: 8Gi
@@ -1033,7 +1033,7 @@ nacos:
     data:
       accessModes:
         - ReadWriteOnce
-      storageClassName: nfs-client
+      storageClassName: ""
       resources:
         requests:
           storage: 2Gi
@@ -1057,7 +1057,7 @@ etcd:
     metrics: 9090
   persistence:
     enabled: true
-    storageClass: "local"
+    storageClass: ""
     accessModes:
       - ReadWriteOnce
     size: 8Gi
@@ -1085,12 +1085,12 @@ initJob:
   image:
     registry: docker.io
     repository: lizardcd/migrate
-    tag: "v0.1.0"
+    tag: "v1.0.0"
     digest: ""
     pullPolicy: IfNotPresent
     pullSecrets: []
   persistence:
-    storageClass: "nfs-client"
+    storageClass: ""
     accessModes:
       - ReadWriteMany
     size: 8Gi

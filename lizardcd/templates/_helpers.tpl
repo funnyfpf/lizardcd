@@ -91,6 +91,18 @@ If release name contains chart name it will be used as a full name.
 {{ include "common.images.image" (dict "imageRoot" .Values.ui.image "global" .Values.global) }}
 {{- end -}}
 
+{{- define "lizardcd.swagger.image" -}}
+{{- $repository := "swaggerapi/swagger-ui" -}}
+{{- $tag := "v5.17.1" -}}
+{{- $registry := "" -}}
+{{- if .Values.global.imageRegistry -}}
+{{- $registry = .Values.global.imageRegistry -}}
+{{- else }}
+{{- $registry = .Values.ui.image.registry -}}
+{{- end -}}
+{{- printf "%s/%s:%s" $registry $repository $tag }}
+{{- end -}}
+
 {{- define "lizardcd.initJob.image" -}}
 {{ include "common.images.image" (dict "imageRoot" .Values.initJob.image "global" .Values.global) }}
 {{- end -}}
