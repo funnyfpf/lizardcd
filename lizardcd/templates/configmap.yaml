@@ -205,5 +205,6 @@ data:
         Cluster: {{ .Values.agent.clusterName }}
       TTL: 60
     {{- end }}
+    KubernetesSecretPrefix: "lizardcd-token"
   {{- end }}
 

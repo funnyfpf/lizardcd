@@ -4,31 +4,23 @@ SPDX-License-Identifier: APACHE-2.0
 */}}
 
 {{- if .Values.agent.rbac.create }}
-kind: ClusterRole
+kind: RoleBinding
 apiVersion: {{ include "common.capabilities.rbac.apiVersion" . }}
 metadata:
-  name: {{ include "lizardcd.agent.fullname" . }}
+  name: {{ template "lizardcd.agent.fullname" . }}
   labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.commonLabels "context" $ ) | nindent 4 }}
     app.kubernetes.io/part-of: lizardcd
     app.kubernetes.io/component: agent
   {{- if .Values.commonAnnotations }}
   annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
   {{- end }}
-rules:
-  - apiGroups:
-      - ""
-      - apps
-      - extensions
-      - events.k8s.io
-      - networking.k8s.io
-    resources:
-      - "*"
-    verbs:
-      - get
-      - list
-      - watch
-      - update
-      - create
-      - patch
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: lizardcd-agent-role
+subjects:
+  - kind: ServiceAccount
+    name: {{ template "lizardcd.agent.serviceAccountName" . }}
+    namespace: {{ include "common.names.namespace" . | quote }}
 {{- end }}
 

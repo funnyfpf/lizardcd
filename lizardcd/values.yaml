@@ -1033,7 +1033,7 @@ nacos:
     data:
       accessModes:
         - ReadWriteOnce
-      storageClassName: ""
+      storageClassName: "nfs-client"
       resources:
         requests:
           storage: 2Gi
@@ -1057,7 +1057,7 @@ etcd:
     metrics: 9090
   persistence:
     enabled: true
-    storageClass: ""
+    storageClass: "nfs-client"
     accessModes:
       - ReadWriteOnce
     size: 8Gi
@@ -1090,7 +1090,7 @@ initJob:
     pullPolicy: IfNotPresent
     pullSecrets: []
   persistence:
-    storageClass: ""
+    storageClass: "nfs-client"
     accessModes:
       - ReadWriteMany
     size: 8Gi
