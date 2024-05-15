@@ -146,6 +146,14 @@ data:
     Etcd:
       Address: {{ join "," $initialCluster | quote }} 
     {{- end }}
+    {{- if .Values.externalEtcd }}
+    {{- $etcdHosts := list }}
+      {{- range $i, $e := .Values.externalEtcd.hosts }}
+      {{- $etcdHosts = append $etcdHosts $e }}
+      {{- end }}
+    Etcd:
+      Address: {{ join "," $etcdHosts | quote }}
+    {{- end }}
     Sqlite: /var/data/lizardcd/lizardcd.db
   {{- end }}
   {{- if  (include "lizardcd.agent.enabled" .) }}
@@ -170,12 +178,16 @@ data:
         {{- range $e, $i := until $replicaCount }}
         {{- $initialCluster = append $initialCluster (printf "%s-%d.%s.%s.svc.cluster.local:%d" $etcdFullname $i $etcdHeadlessServiceName $releaseNamespace $clientPort) }}
         {{- end }}
-    etcd:
-      hosts:  
+    Etcd:
+      Hosts:  
         {{- range $e, $i := $initialCluster }}
         {{- print "- " $i | nindent 8 }}
         {{- end }}
       Key: lizardcd-agent.{{ include "common.names.namespace" . }}.{{ .Values.agent.clusterName }}
+    {{- end }}
+    {{- if .Values.externalEtcd }}
+    Etcd:
+      Hosts: {{- include "common.tplvalues.render" (dict "value" .Values.externalEtcd.hosts "context" $) | nindent 8 }}
     {{- end }}
     {{- if or .Values.nacos.enabled .Values.externalNacos.nacos_host }}
     Nacos:

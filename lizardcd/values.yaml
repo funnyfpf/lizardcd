@@ -1037,6 +1037,12 @@ nacos:
       resources:
         requests:
           storage: 2Gi
+## @section External consul paramaters
+##
+externalEtcd: 
+  hosts: 
+    - 10.0.0.2:2379
+    - 10.0.0.3:2379
 ## @section etcd subchart parameters
 ##
 ## @param etcd.enabled Deploy etcd subchart
@@ -1044,7 +1050,7 @@ nacos:
 ## @param etcd.service.ports.client etcd client port
 ##
 etcd:
-  enabled: true
+  enabled: false
   image:
     registry: docker.io
     repository: bitnami/etcd
