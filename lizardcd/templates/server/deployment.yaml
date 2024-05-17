@@ -5,12 +5,12 @@ metadata:
   name: {{ include "lizardcd.server.fullname" . }}
   labels:
     {{- include "lizardcd.server.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "10"
 spec:
   {{- if not .Values.server.autoscaling.enabled }}
   replicas: {{ .Values.server.replicaCount }}
-  {{- end }}
-  {{- if .Values.server.updateStrategy }}
-  strategy: {{- toYaml .Values.server.updateStrategy | nindent 4 }}
   {{- end }}
   selector:
     matchLabels:
@@ -36,12 +36,11 @@ spec:
         - name: host-time 
           hostPath:
             path: /etc/localtime
-        - name: lizardcd-data
-          persistentVolumeClaim:
-            claimName: lizardcd-data
+        {{- if .Values.server.configuration }}
         - name: server-config
           configMap:
             name: lizardcd
+        {{- end }}
       containers:
         - name: {{ include "lizardcd.server.fullname" . }}-container
           {{- if .Values.server.containerSecurityContext.enabled }}
@@ -50,8 +49,15 @@ spec:
           image: "{{ include "lizardcd.server.image" . }}"
           imagePullPolicy: {{ .Values.server.image.pullPolicy }}
           args:
+            {{- if .Values.server.configuration }}
             - '-f'
             - '/etc/config/lizardcd-server.yaml'
+            {{- else }}
+            - '--consul-addr'
+            - '{{ include "lizardcd.consulhost" . }}'
+            - '--metrics-addr'
+            - '0.0.0.0:15117'
+            {{- end }}
           ports:
             - name: grpc
               containerPort: 5117
@@ -62,11 +68,11 @@ spec:
           volumeMounts:
             - name: host-time 
               mountPath: /etc/localtime 
-            - name: lizardcd-data
-              mountPath: /var/data/lizardcd/
+            {{- if .Values.server.configuration }}
             - name: server-config 
               mountPath: /etc/config/lizardcd-server.yaml
               subPath: lizardcd-server.yaml 
+            {{- end }}
           {{- if .Values.server.resources }}
           resources: {{- include "common.tplvalues.render" (dict "value" .Values.server.resources "context" $) | nindent 12 }}
           {{- end }}
@@ -101,5 +107,8 @@ spec:
       {{- end }}
       tolerations:
         {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.server.updateStrategy }}
+      updateStrategy: {{- toYaml .Values.server.updateStrategy | nindent 4 }}
       {{- end }}
 {{- end -}}

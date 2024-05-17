@@ -9,9 +9,6 @@ spec:
   {{- if not .Values.agent.autoscaling.enabled }}
   replicas: {{ .Values.agent.replicaCount }}
   {{- end }}
-  {{- if .Values.agent.updateStrategy }}
-  strategy: {{- toYaml .Values.agent.updateStrategy | nindent 4 }}
-  {{- end }}
   selector:
     matchLabels:
       {{- include "lizardcd.agent.selectorLabels" . | nindent 6 }}
@@ -36,9 +33,11 @@ spec:
         - name: host-time 
           hostPath:
             path: /etc/localtime
+        {{- if .Values.agent.configuration }}
         - name: agent-config
           configMap:
             name: lizardcd
+        {{- end }}
       containers:
         - name: {{ include "lizardcd.agent.fullname" . }}-container
           {{- if .Values.agent.containerSecurityContext.enabled }}
@@ -47,8 +46,17 @@ spec:
           image: "{{ include "lizardcd.agent.image" . }}"
           imagePullPolicy: {{ .Values.agent.image.pullPolicy }}
           args:
+            {{- if .Values.agent.configuration }}
             - '-f'
             - '/etc/config/lizardcd-agent.yaml'
+            {{- else }}
+            - '--consul.host'
+            - '{{ include "lizardcd.consulhost" . }}'
+            - '--consul.key'
+            - 'lizardcd-agent.{{ include "common.names.namespace" . }}.{{ .Values.agent.clusterName }}'
+            - '--register.endpoint'
+            - '{{ include "lizardcd.agent.fullname" . }}:5017'
+            {{- end }}
           ports:
             - name: grpc
               containerPort: 5017
@@ -59,9 +67,11 @@ spec:
           volumeMounts:
             - name: host-time 
               mountPath: /etc/localtime 
+            {{- if .Values.agent.configuration }}
             - name: agent-config 
               mountPath: /etc/config/lizardcd-agent.yaml
               subPath: lizardcd-agent.yaml 
+            {{- end }}
           {{- if .Values.agent.resources }}
           resources: {{- include "common.tplvalues.render" (dict "value" .Values.agent.resources "context" $) | nindent 12 }}
           {{- end }}
@@ -97,6 +107,9 @@ spec:
       {{- end }}
       {{- if .Values.agent.terminationGracePeriodSeconds }}
       terminationGracePeriodSeconds: {{ .Values.agent.terminationGracePeriodSeconds }}
+      {{- end }}
+      {{- if .Values.agent.updateStrategy }}
+      updateStrategy: {{- toYaml .Values.agent.updateStrategy | nindent 4 }}
       {{- end }}
 {{- end -}}
 
