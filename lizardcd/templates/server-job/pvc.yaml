@@ -6,8 +6,8 @@ metadata:
   labels:
     app.kubernetes.io/instance: lizardcd
     app.kubernetes.io/name: lizardcd
-  {{- if .Values.initJob.annotations }}
-  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.initJob.annotations "context" $) | nindent 10 }}
+  {{- if .Values.initJob.persistence.annotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.initJob.persistence.annotations "context" $) | nindent 10 }}
   {{- end }}
 spec:
   accessModes:

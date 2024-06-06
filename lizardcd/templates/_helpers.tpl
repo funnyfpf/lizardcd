@@ -91,6 +91,18 @@ If release name contains chart name it will be used as a full name.
 {{ include "common.images.image" (dict "imageRoot" .Values.ui.image "global" .Values.global) }}
 {{- end -}}
 
+{{- define "lizardcd.swagger.image" -}}
+{{- $repository := "swaggerapi/swagger-ui" -}}
+{{- $tag := "v5.17.1" -}}
+{{- $registry := "" -}}
+{{- if .Values.global.imageRegistry -}}
+{{- $registry = .Values.global.imageRegistry -}}
+{{- else }}
+{{- $registry = .Values.ui.image.registry -}}
+{{- end -}}
+{{- printf "%s/%s:%s" $registry $repository $tag }}
+{{- end -}}
+
 {{- define "lizardcd.initJob.image" -}}
 {{ include "common.images.image" (dict "imageRoot" .Values.initJob.image "global" .Values.global) }}
 {{- end -}}
@@ -103,7 +115,47 @@ If release name contains chart name it will be used as a full name.
 {{- .Values.externalConsul.consul_host }}
 {{- end -}}
 {{- end -}}
- 
+
+{{- define "lizardcd.nacos.namespaceId" -}}
+{{- if .Values.nacos.enabled -}}
+{{- default "public" .Values.nacos.namespaceId }}
+{{- else }}
+{{- .Values.externalNacos.namespaceId }}
+{{- end -}}
+{{- end -}}
+
+{{- define "lizardcd.nacos.group" -}}
+{{- if .Values.nacos.enabled -}}
+{{- default "lizardcd" .Values.nacos.group }}
+{{- else }}
+{{- .Values.externalNacos.group }}
+{{- end }}
+{{- end }}
+
+{{- define "lizardcd.nacos.username" -}}
+{{- if .Values.nacos.enabled -}}
+{{- default "nacos" .Values.nacos.nacos.storage.db.username }}
+{{- else }}
+{{- .Values.externalNacos.username }}
+{{- end }}
+{{- end }}
+
+{{- define "lizardcd.nacos.password" -}}
+{{- if .Values.nacos.enabled -}}
+{{- default "nacos" .Values.nacos.nacos.storage.db.password }}
+{{- else }}
+{{- .Values.externalNacos.password }}
+{{- end }}
+{{- end }}
+
+
+{{- define "lizardcd.etcdhost" -}}
+{{- if .Values.etcd.enabled -}}
+{{- $name := "etcd" }}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
+{{- end -}}
+{{- end -}}
+
 {{- define "lizardcd.ui.externalServer" -}}
 {{- if .Values.ui.externalServer -}}
 {{- printf "%s:%s" .Values.ui.externalServer.server .Values.ui.externalServer.port }}

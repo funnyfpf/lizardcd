@@ -18,28 +18,13 @@ server:
   replicaCount: 1
   
   image:
-    registry: docker.io
-    repository: lizardcd/lizardcd-server 
+    registry: "docker.io"
+    repository: "lizardcd/lizardcd-server"
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "v0.0.1"
+    tag: "v1.2.1"
     digest: ""
     pullPolicy: IfNotPresent
     pullSecrets: []    
-  configuration: {}  
-    # Name: lizardServer
-    # Host: 0.0.0.0
-    # Port: 5117
-    # Timeout: 60000
-    # Log:
-    #   Encoding: plain
-    #   Level: info 
-    # Prometheus:
-    #   Host: 0.0.0.0
-    #   Port: 15117
-    #   Path: /metrics
-    # Consul:
-    #   Address: 10.50.89.17:8086
-
   nameOverride: ""
   fullnameOverride: ""
 
@@ -86,7 +71,7 @@ server:
   ## @param server.containerSecurityContext.seccompProfile.type Set container's Security Context seccomp profile
   ##
   containerSecurityContext:
-    enabled: true
+    enabled: false
     seLinuxOptions: null
     runAsUser: 1001
     runAsNonRoot: true
@@ -105,14 +90,14 @@ server:
     ## @param server.service.type lizardcd-server service type
     ##
     type: ClusterIP
-    ## @param server.service.ports.http lizardcd-server service grpc port
-    ## @param server.service.ports.cluster lizardcd-server metrics port
+    ## @param server.service.ports.grpc lizardcd-server service grpc port
+    ## @param server.service.ports.metrics lizardcd-server metrics port
     ##
     ports:
       grpc: 5117
       metrics: 15117
     ## Node ports to expose
-    ## @param server.service.nodePorts.http Node port for HTTP
+    ## @param server.service.nodePorts.grpc Node port for GRPC
     ## NOTE: choose port between <30000-32767>
     ##
     nodePorts:
@@ -270,11 +255,11 @@ server:
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
   # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
   # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
+  #   cpu: 200m
+  #   memory: 500Mi
   # requests:
   #   cpu: 100m
-  #   memory: 128Mi
+  #   memory: 250Mi
 
   ## @param server.livenessProbe.enabled Enable/disable the liveness probe (server-eligible nodes pod)
   ## @param server.livenessProbe.initialDelaySeconds Delay before liveness probe is initiated (server-eligible nodes pod)
@@ -285,7 +270,7 @@ server:
   ##
   livenessProbe:
     enabled: true
-    initialDelaySeconds: 30
+    initialDelaySeconds: 10
     periodSeconds: 30
     timeoutSeconds: 5
     successThreshold: 1
@@ -299,7 +284,7 @@ server:
   ##
   readinessProbe:
     enabled: true
-    initialDelaySeconds: 30
+    initialDelaySeconds: 10
     periodSeconds: 30
     timeoutSeconds: 5
     successThreshold: 1
@@ -343,32 +328,16 @@ agent:
   image:
     registry: docker.io
     repository: lizardcd/lizardcd-agent
-    tag: "v0.0.1"
+    tag: "v1.2.1"
     digest: ""
     pullPolicy: IfNotPresent
     pullSecrets: []
-  ##This content will be stored in the the lizardcd-agent.yaml file and the content can be a template.                               
-  ##
-  configuration: {}
-    # Name: LizardAgent
-    # ListenOn: 0.0.0.0:5017
-    # Timeout: 60000
-    # Log:
-    #   Encoding: plain
-    #   Level: info 
-    # Prometheus:
-    #   Host: 0.0.0.0
-    #   Port: 15017
-    #   Path: /metrics
-    # Consul:
-    #   Host: 10.50.89.17:8086
-    #   Key: lizardcd-lizardcd-agent.fiofa-ofa-bdev.bdk8s
-    #   Meta:
-    #     Protocol: grpc
-    #     Service: lizardcd-lizardcd-agent
-    #     Namespace: fiofa-ofa-bdev
-    #     Cluster: bdk8s
-    #   TTL: 60
+  persistence:
+    storageClass: ""
+    annotations: {}
+    accessModes:
+      - ReadWriteMany
+    size: 1Gi
   nameOverride: ""
   fullnameOverride: ""
   # RBAC configuration
@@ -434,7 +403,7 @@ agent:
   ## @param agent.containerSecurityContext.seccompProfile.type Set container's Security Context seccomp profile
   ##
   containerSecurityContext:
-    enabled: true
+    enabled: false
     seLinuxOptions: null
     runAsUser: 1001
     runAsNonRoot: true
@@ -448,20 +417,20 @@ agent:
 
   ## Specify the name of the cluster where the agent resides
   ##
-  clusterName: "bdevk8s"
+  clusterName: "k8s"
   service:
     ## @param service.enabled Use a service to access lizardcd Agent
     ##
     enabled: true
     type: ClusterIP
-    ## @param agent.service.ports.http lizardcd-agent service grpc port
-    ## @param agent.service.ports.cluster lizardcd-agent metrics port
+    ## @param agent.service.ports.grpc lizardcd-agent service grpc port
+    ## @param agent.service.ports.metrics lizardcd-agent metrics port
     ##
     ports:
       grpc: 5017
       metrics: 15017
     ## Node ports to expose
-    ## @param agent.service.nodePorts.http Node port for HTTP
+    ## @param agent.service.nodePorts.grpc Node port for GRPC
     ## NOTE: choose port between <30000-32767>
     ##
     nodePorts:
@@ -634,7 +603,7 @@ agent:
   ##
   livenessProbe:
     enabled: true
-    initialDelaySeconds: 30
+    initialDelaySeconds: 10
     periodSeconds: 30
     timeoutSeconds: 5
     successThreshold: 1
@@ -648,7 +617,7 @@ agent:
   ##
   readinessProbe:
     enabled: true
-    initialDelaySeconds: 30
+    initialDelaySeconds: 10
     periodSeconds: 30
     timeoutSeconds: 5
     successThreshold: 1
@@ -695,7 +664,7 @@ ui:
   image:
     registry: docker.io
     repository: lizardcd/lizardcd-ui
-    tag: "v0.0.1"
+    tag: "v1.2.1"
     digest: ""
     pullPolicy: IfNotPresent
     pullSecrets: []
@@ -759,7 +728,7 @@ ui:
     enabled: true
     ## @param ui.service.type lizardcd-ui service type
     ##
-    type: LoadBalancer
+    type: ClusterIP
     ## @param ui.service.ports.http lizardcd-ui service HTTP port
     ##
     ports:
@@ -970,7 +939,7 @@ externalConsul: {}
 ## @param consul.service.ports.client consul client port
 ##
 consul:
-  enabled: true
+  enabled: false
   image:
     registry: docker.io
     repository: bitnami/consul
@@ -982,10 +951,89 @@ consul:
       http: 80
   persistence:
     enabled: true
-    storageClass: "local"
+    storageClass: ""
     accessModes:
       - ReadWriteOnce
     size: 8Gi
+## @section External nacos paramaters
+##
+externalNacos: {}
+  ## nacos_host: ""
+  ## username: ""
+  ## password: ""
+  ## namespaceId: ""
+  ## group: ""
+  ## Meta:   # custom your metadata here 
+  ##   Protocol: grpc
+  ##   Service: lizardcd-agent
+  ##   Namespace: dev
+  ##   Cluster: devk8s
+## @section consul subchart parameters
+##
+## @param consul.enabled Deploy consul subchart
+## @param consul.replicaCount Number of consul instances
+## @param consul.service.ports.client consul client port
+##
+nacos: 
+  enabled: false
+  nacos:
+    image:
+      registry: docker.io
+      repository: nacos/nacos-server
+      tag: v2.2.3
+      pullPolicy: IfNotPresent
+    mode: standalone
+    storage:
+      type: embedded
+      db:
+        host: localhost
+        name: nacos
+        port: 3306
+        username: nacos
+        password: nacos
+        param: characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&useSSL=false
+  namespaceId: ""
+  group: ""
+  persistence:
+    enabled: true
+    data:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: ""
+      resources:
+        requests:
+          storage: 2Gi
+## @section External consul paramaters
+##
+externalEtcd: {}
+  # hosts: 
+  #   - 10.0.0.2:2379
+  #   - 10.0.0.3:2379
+## @section etcd subchart parameters
+##
+## @param etcd.enabled Deploy etcd subchart
+## @param etcd.replicaCount Number of etcd instances
+## @param etcd.service.ports.client etcd client port
+##
+etcd:
+  enabled: true
+  image:
+    registry: docker.io
+    repository: bitnami/etcd
+    tag: 3.4.31-debian-12-r3
+    pullPolicy: IfNotPresent
+  replicaCount: 3
+  ports:
+    client: 2379
+    peer: 2380
+    metrics: 9090
+  persistence:
+    enabled: true
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+
 initJob:
   ## Specifies the number of job retries
   setup:
@@ -1009,15 +1057,16 @@ initJob:
   image:
     registry: docker.io
     repository: lizardcd/migrate
-    tag: "v0.1.0"
+    tag: "v1.2.1"
     digest: ""
     pullPolicy: IfNotPresent
     pullSecrets: []
   persistence:
-    storageClass: "nfs-client"
+    storageClass: ""
+    annotations: {}
     accessModes:
       - ReadWriteMany
-    size: 8Gi
+    size: 5Gi
   fullnameOverride: ""
   serviceAccount:
   # Specifies whether a service account should be created

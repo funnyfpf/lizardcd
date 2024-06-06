@@ -1,0 +1,21 @@
+{{- if (include "lizardcd.agent.enabled" .) }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: lizardcd-agent-data
+  labels:
+    app.kubernetes.io/instance: lizardcd
+    app.kubernetes.io/name: lizardcd
+  {{- if .Values.agent.persistence.annotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.agent.persistence.annotations "context" $) | nindent 10 }}
+  {{- end }}
+spec:
+  accessModes:
+  {{- range .Values.agent.persistence.accessModes }}
+  - {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.agent.persistence.size | quote }}
+  {{ include "common.storage.class" (dict "persistence" .Values.agent.persistence "global" .Values.global) }}
+{{- end -}}

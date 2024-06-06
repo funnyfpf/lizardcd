@@ -9,6 +9,9 @@ spec:
   {{- if not .Values.ui.autoscaling.enabled }}
   replicas: {{ .Values.ui.replicaCount }}
   {{- end }}
+  {{- if .Values.ui.updateStrategy }}
+  strategy: {{- toYaml .Values.ui.updateStrategy | nindent 4 }}
+  {{- end }}
   selector:
     matchLabels:
       {{- include "lizardcd.ui.selectorLabels" . | nindent 6 }}
@@ -55,6 +58,19 @@ spec:
               subPath: nginx.conf
           resources:
             {{- toYaml .Values.ui.resources | nindent 12 }}
+        - name: swagger-ui-container
+          {{- if .Values.ui.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.ui.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          image: "{{ include "lizardcd.swagger.image" . }}"
+          imagePullPolicy: {{ .Values.ui.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env: 
+            - name: SWAGGER_JSON_URL
+              value: /lizardcd/server-static/docs/swagger.json/
       {{- with .Values.ui.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -72,9 +88,6 @@ spec:
       {{- end }}
       {{- if .Values.ui.terminationGracePeriodSeconds }}
       terminationGracePeriodSeconds: {{ .Values.ui.terminationGracePeriodSeconds }}
-      {{- end }}
-      {{- if .Values.ui.updateStrategy }}
-      updateStrategy: {{- toYaml .Values.ui.updateStrategy | nindent 4 }}
       {{- end }}
 {{- end -}}
 

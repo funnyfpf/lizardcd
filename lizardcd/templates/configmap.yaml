@@ -1,8 +1,3 @@
-{{- /*
-Copyright VMware, Inc.
-SPDX-License-Identifier: APACHE-2.0
-*/}}
-
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -49,17 +44,6 @@ data:
         }
 
         # Todo: To be removed after frondend adjusted to real service labels.
-        location /consul {
-          # proxy_http_version 1.1;
-          proxy_set_header Host $proxy_host;
-          proxy_set_header X-Real-IP $remote_addr;
-          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-          {{- if .Values.ui.externalServer }}
-          proxy_pass http://{{ include "lizardcd.ui.externalServer" .}};
-          {{- else }}
-          proxy_pass http://{{ include "lizardcd.server.fullname" . }}:5117;
-          {{- end }}
-        }
         location /lizardcd {
           # proxy_http_version 1.1;
           proxy_set_header Host $proxy_host;
@@ -71,16 +55,136 @@ data:
           proxy_pass http://{{ include "lizardcd.server.fullname" . }}:5117;
           {{- end }}
         }
+        location /swagger {
+          # proxy_http_version 1.1;
+          proxy_set_header Host $proxy_host;
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_pass http://localhost:8080/;
+        }
       }
     }
   {{- end }}
-  {{- if and (include "lizardcd.server.enabled" .) .Values.server.configuration }}
+  {{- if  (include "lizardcd.server.enabled" .) }}
   lizardcd-server.yaml: |
-    {{- include "common.tplvalues.render" ( dict "value" .Values.server.configuration "context" $ ) | nindent 4 }}
+    Name: lizardServer
+    Host: 0.0.0.0
+    Port: 5117
+    Timeout: 60000
+    Log:
+      Encoding: plain
+      Level: info 
+    Prometheus:
+      Host: 0.0.0.0
+      Port: 15117
+      Path: /metrics
+    Auth:
+      AccessSecret: wLnOk8keh/WO5u7lX8H1dB1/mcuHvnI/jfWCMXMPg9o=
+      AccessExpire: 86400
+    {{- if or .Values.consul.enabled .Values.externalConsul.consul_host }}
+    Consul:
+      Address: {{- include "lizardcd.consulhost" . }}
+    {{- end }}
+    {{- if or .Values.nacos.enabled .Values.externalNacos.nacos_host }}
+    Nacos:
+      {{- if and .Values.nacos.enabled (eq .Values.nacos.nacos.mode "cluster") -}} 
+      {{- $name := "nacos-hs" }}  
+      Address: {{ printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+      {{- else if and .Values.nacos.enabled (eq .Values.nacos.nacos.mode "standalone") -}}
+      {{- $name := "nacos" }} 
+      Address: {{ printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+      {{- else }} 
+      Address: {{ .Values.externalNacos.nacos_host -}}  
+      {{- end }}   
+      NamespaceId: {{ include "lizardcd.nacos.namespaceId" . }}
+      Group: {{ include "lizardcd.nacos.group" . }}
+      Username: {{ include "lizardcd.nacos.username" . }}
+      Password: {{ include "lizardcd.nacos.password" . }}
+    {{- end }}
+    {{- if .Values.etcd.enabled }}
+    {{- $replicaCount := int .Values.etcd.replicaCount }}
+    {{- $releaseNamespace := .Release.Namespace }}
+    {{- $etcdFullname := include "lizardcd.etcdhost" . }}
+    {{- $etcdHeadlessServiceName := (printf "%s-%s" $etcdFullname "headless" | trunc 63 | trimSuffix "-") }}
+    {{- $clientPort := int .Values.etcd.ports.client }}
+    {{- $initialCluster := list }}
+        {{- range $e, $i := until $replicaCount }}
+        {{- $initialCluster = append $initialCluster (printf "%s-%d.%s.%s.svc.cluster.local:%d" $etcdFullname $i $etcdHeadlessServiceName $releaseNamespace $clientPort) }}
+        {{- end }}
+    Etcd:
+      Address: {{ join "," $initialCluster | quote }} 
+    {{- end }}
+    {{- if .Values.externalEtcd }}
+    {{- $etcdHosts := list }}
+      {{- range $i, $e := .Values.externalEtcd.hosts }}
+      {{- $etcdHosts = append $etcdHosts $e }}
+      {{- end }}
+    Etcd:
+      Address: {{ join "," $etcdHosts | quote }}
+    {{- end }}
+    Sqlite: /var/data/lizardcd/lizardcd.db
   {{- end }}
-  {{- if and (include "lizardcd.agent.enabled" .) .Values.agent.configuration }}
+  {{- if  (include "lizardcd.agent.enabled" .) }}
   lizardcd-agent.yaml: |
-    {{- include "common.tplvalues.render" ( dict "value" .Values.agent.configuration "context" $ ) | nindent 4 }}
+    Name: LizardAgent
+    ListenOn: 0.0.0.0:5017
+    Timeout: 60000
+    Log:
+      Encoding: plain
+      Level: info 
+    Prometheus:
+      Host: 0.0.0.0
+      Port: 15017
+      Path: /metrics
+    {{- if .Values.etcd.enabled }}
+    {{- $replicaCount := int .Values.etcd.replicaCount }}
+    {{- $releaseNamespace := .Release.Namespace }}
+    {{- $etcdFullname := include "lizardcd.etcdhost" . }}
+    {{- $etcdHeadlessServiceName := (printf "%s-%s" $etcdFullname "headless" | trunc 63 | trimSuffix "-") }}
+    {{- $clientPort := int .Values.etcd.ports.client }}
+    {{- $initialCluster := list }}
+        {{- range $e, $i := until $replicaCount }}
+        {{- $initialCluster = append $initialCluster (printf "%s-%d.%s.%s.svc.cluster.local:%d" $etcdFullname $i $etcdHeadlessServiceName $releaseNamespace $clientPort) }}
+        {{- end }}
+    Etcd:
+      Hosts:  
+        {{- range $e, $i := $initialCluster }}
+        {{- print "- " $i | nindent 8 }}
+        {{- end }}
+      Key: lizardcd-agent.{{ include "common.names.namespace" . }}.{{ .Values.agent.clusterName }}
+    {{- end }}
+    {{- if .Values.externalEtcd }}
+    Etcd:
+      Hosts: {{- include "common.tplvalues.render" (dict "value" .Values.externalEtcd.hosts "context" $) | nindent 8 }}
+    {{- end }}
+    {{- if or .Values.nacos.enabled .Values.externalNacos.nacos_host }}
+    Nacos:
+      {{- if and .Values.nacos.enabled (eq .Values.nacos.nacos.mode "cluster") -}} 
+      {{- $name := "nacos-hs" }}  
+      Host: {{ printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+      {{- else if and .Values.nacos.enabled (eq .Values.nacos.nacos.mode "standalone") -}}
+      {{- $name := "nacos" }} 
+      Host: {{ printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+      {{- else }} 
+      Host: {{ .Values.externalNacos.nacos_host -}}  
+      {{- end }}   
+      Key: lizardcd-agent.{{ include "common.names.namespace" . }}.{{ .Values.agent.clusterName }}
+      NamespaceId: {{ include "lizardcd.nacos.namespaceId" . }}
+      Group: {{ include "lizardcd.nacos.group" . }}
+      Username: {{ include "lizardcd.nacos.username" . }}
+      Password: {{ include "lizardcd.nacos.password" . }}
+    {{- end }}
+    {{- if or .Values.consul.enabled .Values.externalConsul.consul_host }}
+    Consul:
+      Host: {{ include "lizardcd.consulhost" . }}
+      Key: lizardcd-agent.{{ include "common.names.namespace" . }}.{{ .Values.agent.clusterName }}
+      Meta:
+        Protocol: grpc
+        Service: {{ include "lizardcd.agent.fullname" . }}
+        Namespace: {{ include "common.names.namespace" . }}
+        Cluster: {{ .Values.agent.clusterName }}
+      TTL: 60
+    {{- end }}
+    KubernetesSecretPrefix: "lizardcd-token"
   {{- end }}
-
 

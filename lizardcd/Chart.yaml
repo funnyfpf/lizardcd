@@ -1,10 +1,18 @@
 apiVersion: v2
-appVersion: 1.0.0
+appVersion: 1.2.0
 dependencies:
 - condition: consul.enabled
   name: consul
   repository: oci://registry-1.docker.io/bitnamicharts
   version: 10.x.x
+- condition: etcd.enabled
+  name: etcd
+  repository: oci://registry-1.docker.io/bitnamicharts
+  version: 9.x.x
+- condition: nacos.enabled
+  name: nacos
+  repository: oci://registry-1.docker.io/bitnamicharts
+  version: 0.x.x
 - name: common
   repository: oci://registry-1.docker.io/bitnamicharts
   tags:
@@ -19,4 +27,4 @@ maintainers:
 - name: lizardcd
 name: lizardcd
 type: application
-version: 1.0.0
+version: 2.0.1
