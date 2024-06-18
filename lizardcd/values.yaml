@@ -18,7 +18,7 @@ server:
   replicaCount: 1
   
   image:
-    registry: "docker.io"
+    registry: "registry.cn-beijing.aliyuncs.com"
     repository: "lizardcd/lizardcd-server"
     # Overrides the image tag whose default is the chart appVersion.
     tag: "v1.2.1"
@@ -326,7 +326,7 @@ agent:
   replicaCount: 1
   
   image:
-    registry: docker.io
+    registry: registry.cn-beijing.aliyuncs.com
     repository: lizardcd/lizardcd-agent
     tag: "v1.2.1"
     digest: ""
@@ -662,7 +662,7 @@ ui:
   ## port: 5117
 
   image:
-    registry: docker.io
+    registry: registry.cn-beijing.aliyuncs.com
     repository: lizardcd/lizardcd-ui
     tag: "v1.2.1"
     digest: ""
@@ -941,7 +941,7 @@ externalConsul: {}
 consul:
   enabled: false
   image:
-    registry: docker.io
+    registry: registry.cn-beijing.aliyuncs.com
     repository: bitnami/consul
     tag: 1.14.3-debian-11-r0
     pullPolicy: IfNotPresent
@@ -978,7 +978,7 @@ nacos:
   enabled: false
   nacos:
     image:
-      registry: docker.io
+      registry: registry.cn-beijing.aliyuncs.com
       repository: nacos/nacos-server
       tag: v2.2.3
       pullPolicy: IfNotPresent
@@ -1018,7 +1018,7 @@ externalEtcd: {}
 etcd:
   enabled: true
   image:
-    registry: docker.io
+    registry: registry.cn-beijing.aliyuncs.com
     repository: bitnami/etcd
     tag: 3.4.31-debian-12-r3
     pullPolicy: IfNotPresent
@@ -1055,7 +1055,7 @@ initJob:
   ## Configure Pods Security Context
   securityContext: {}
   image:
-    registry: docker.io
+    registry: registry.cn-beijing.aliyuncs.com
     repository: lizardcd/migrate
     tag: "v1.2.1"
     digest: ""
